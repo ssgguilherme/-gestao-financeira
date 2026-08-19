@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Dark mode scrollbars (default) */
+::-webkit-scrollbar-thumb {
+  background: #2a364f;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3b4c68;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #52678a;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* Light mode scrollbars */
+html:not(.dark) ::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+html:not(.dark) ::-webkit-scrollbar-thumb:active {
+  background: #475569;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* Firefox custom scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2a364f transparent;
+}
+
+html:not(.dark) * {
+  scrollbar-color: #94a3b8 transparent;
+}
+
+/* Prevent iOS / Mobile browser auto-zoom on input focus */
+input, select, textarea {
+  font-size: 16px !important;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Mobile Safe Area Insets (iOS Notch & Android Navigation Bar) */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+.safe-pt {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-pl {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
+.safe-pr {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+.safe-p {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
