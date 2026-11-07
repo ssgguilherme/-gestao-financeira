@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { authenticateJWT } from './server/middleware/auth';
+import { store } from './server/db/store';
 import {
   registerUser,
   loginUser,
@@ -78,6 +79,13 @@ function authRateLimiter(maxRequests = 20, windowMs = 60000) {
 async function startServer() {
   const app = express();
   const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+
+  // Sincroniza dados com o Firestore para restaurar usuários persistentes
+  try {
+    await store.syncWithCloud();
+  } catch (syncErr) {
+    console.warn('Aviso: sync inicial com cloud falhou, usando dados locais:', syncErr);
+  }
 
   // Body parser com limite seguro
   app.use(express.json({ limit: '10mb' }));

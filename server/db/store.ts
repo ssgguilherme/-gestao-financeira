@@ -517,12 +517,76 @@ function getSeedData(): DatabaseSchema {
   };
 }
 
+import { fetchStoreFromCloud, scheduleCloudSave } from './firebaseStore';
+
 class Store {
   private data: DatabaseSchema;
   private isSaving = false;
+  private isCloudSynced = false;
 
   constructor() {
     this.data = this.load();
+    this.syncWithCloud().catch((e) => console.error('Cloud sync error in background:', e));
+  }
+
+  public async syncWithCloud(): Promise<void> {
+    try {
+      const cloudData = await fetchStoreFromCloud();
+      if (cloudData && Array.isArray(cloudData.users) && cloudData.users.length > 0) {
+        // Preserva usuários da nuvem e mescla com locais
+        const userMap = new Map<string, User>();
+        for (const u of this.data.users) userMap.set(u.email.toLowerCase(), u);
+        for (const u of cloudData.users) userMap.set(u.email.toLowerCase(), u);
+        this.data.users = Array.from(userMap.values());
+
+        if (Array.isArray(cloudData.transactions)) {
+          const txMap = new Map(this.data.transactions.map((t) => [t.id, t]));
+          for (const t of cloudData.transactions) txMap.set(t.id, t);
+          this.data.transactions = Array.from(txMap.values());
+        }
+        if (Array.isArray(cloudData.accounts)) {
+          const accMap = new Map(this.data.accounts.map((a) => [a.id, a]));
+          for (const a of cloudData.accounts) accMap.set(a.id, a);
+          this.data.accounts = Array.from(accMap.values());
+        }
+        if (Array.isArray(cloudData.cards)) {
+          const cardMap = new Map(this.data.cards.map((c) => [c.id, c]));
+          for (const c of cloudData.cards) cardMap.set(c.id, c);
+          this.data.cards = Array.from(cardMap.values());
+        }
+        if (Array.isArray(cloudData.budgets)) {
+          const bMap = new Map(this.data.budgets.map((b) => [b.id, b]));
+          for (const b of cloudData.budgets) bMap.set(b.id, b);
+          this.data.budgets = Array.from(bMap.values());
+        }
+        if (Array.isArray(cloudData.goals)) {
+          const gMap = new Map(this.data.goals.map((g) => [g.id, g]));
+          for (const g of cloudData.goals) gMap.set(g.id, g);
+          this.data.goals = Array.from(gMap.values());
+        }
+        if (Array.isArray(cloudData.investments)) {
+          const iMap = new Map(this.data.investments.map((i) => [i.id, i]));
+          for (const i of cloudData.investments) iMap.set(i.id, i);
+          this.data.investments = Array.from(iMap.values());
+        }
+        if (Array.isArray(cloudData.categories)) {
+          const cMap = new Map(this.data.categories.map((c) => [c.id, c]));
+          for (const c of cloudData.categories) cMap.set(c.id, c);
+          this.data.categories = Array.from(cMap.values());
+        }
+
+        this.ensureDemoUserConsistency(this.data);
+        this.saveDirect(this.data);
+        this.isCloudSynced = true;
+        console.log(`✅ [Store] Sincronização Firestore concluída! Total de ${this.data.users.length} usuários.`);
+      } else {
+        console.log('☁️ [Store] Primeiro deploy: persistindo estado inicial para o Firestore...');
+        scheduleCloudSave(this.data);
+        this.isCloudSynced = true;
+      }
+    } catch (err) {
+      console.error('⚠️ [Store] Erro ao sincronizar com Firestore:', err);
+    }
   }
 
   private load(): DatabaseSchema {
@@ -587,8 +651,7 @@ class Store {
   }
 
   /**
-   * Salva com escrita atômica (atomic write: temp file + rename)
-   * e cria cópia de segurança antes de sobrescrever.
+   * Salva com escrita atômica no disco e agenda salvamento persistente no Firestore
    */
   public save(): void {
     if (this.isSaving) return;
@@ -596,8 +659,9 @@ class Store {
 
     try {
       this.saveDirect(this.data);
+      scheduleCloudSave(this.data);
     } catch (err) {
-      console.error('❌ [Store] Erro ao gravar dados no disco:', err);
+      console.error('❌ [Store] Erro ao gravar dados:', err);
     } finally {
       this.isSaving = false;
     }

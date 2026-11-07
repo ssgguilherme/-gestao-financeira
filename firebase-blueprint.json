@@ -1,0 +1,187 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile in FinanFlow",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "avatarUrl": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "createdAt"]
+    },
+    "BankAccount": {
+      "title": "BankAccount",
+      "description": "User bank account or wallet",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "balance": { "type": "number" },
+        "color": { "type": "string" },
+        "bank": { "type": "string" },
+        "icon": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "name", "type", "balance", "color", "bank", "createdAt"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Financial transaction (income or expense)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "accountId": { "type": "string" },
+        "cardId": { "type": "string" },
+        "description": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string" },
+        "category": { "type": "string" },
+        "date": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "status": { "type": "string" },
+        "observation": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "description", "amount", "type", "category", "date", "paymentMethod", "status", "createdAt"]
+    },
+    "CreditCard": {
+      "title": "CreditCard",
+      "description": "User credit card",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "last4": { "type": "string" },
+        "brand": { "type": "string" },
+        "limit": { "type": "number" },
+        "availableLimit": { "type": "number" },
+        "closingDay": { "type": "number" },
+        "dueDay": { "type": "number" },
+        "color": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "name", "last4", "brand", "limit", "availableLimit", "closingDay", "dueDay", "color", "createdAt"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Custom transaction category",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "color": { "type": "string" },
+        "icon": { "type": "string" }
+      },
+      "required": ["id", "userId", "name", "type", "color", "icon"]
+    },
+    "Budget": {
+      "title": "Budget",
+      "description": "Monthly category budget limit",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "categoryId": { "type": "string" },
+        "categoryName": { "type": "string" },
+        "limit": { "type": "number" },
+        "spent": { "type": "number" },
+        "month": { "type": "number" },
+        "year": { "type": "number" }
+      },
+      "required": ["id", "userId", "categoryId", "categoryName", "limit", "spent", "month", "year"]
+    },
+    "Goal": {
+      "title": "Goal",
+      "description": "Financial savings goal",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "targetAmount": { "type": "number" },
+        "currentAmount": { "type": "number" },
+        "deadline": { "type": "string" },
+        "color": { "type": "string" },
+        "icon": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "title", "targetAmount", "currentAmount", "deadline", "color", "icon", "createdAt"]
+    },
+    "Investment": {
+      "title": "Investment",
+      "description": "User investment asset",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "amountInvested": { "type": "number" },
+        "currentValue": { "type": "number" },
+        "profitability": { "type": "number" },
+        "dueDate": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "name", "type", "amountInvested", "currentValue", "profitability", "createdAt"]
+    },
+    "AppPersistence": {
+      "title": "AppPersistence",
+      "description": "Cloud store persistence document",
+      "type": "object",
+      "properties": {
+        "updatedAt": { "type": "string" },
+        "version": { "type": "number" },
+        "data": { "type": "string" }
+      },
+      "required": ["updatedAt", "version"]
+    }
+  },
+  "firestore": {
+    "/system/{systemId}": {
+      "schema": "AppPersistence",
+      "description": "Global persistent state and data store across Cloud Run publishes"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User account profiles"
+    },
+    "/users/{userId}/accounts/{accountId}": {
+      "schema": "BankAccount",
+      "description": "Bank accounts owned by the user"
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "User financial transactions"
+    },
+    "/users/{userId}/cards/{cardId}": {
+      "schema": "CreditCard",
+      "description": "User credit cards"
+    },
+    "/users/{userId}/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "User transaction categories"
+    },
+    "/users/{userId}/budgets/{budgetId}": {
+      "schema": "Budget",
+      "description": "User budgets"
+    },
+    "/users/{userId}/goals/{goalId}": {
+      "schema": "Goal",
+      "description": "User savings goals"
+    },
+    "/users/{userId}/investments/{investmentId}": {
+      "schema": "Investment",
+      "description": "User investment assets"
+    }
+  }
+}

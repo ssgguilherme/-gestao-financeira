@@ -4,7 +4,7 @@
       "id": "usr_demo_1",
       "name": "Sérgio Guilherme",
       "email": "demo@finanflow.com",
-      "passwordHash": "$2b$10$nRF8vVoNhPjqlEzzKumltub.yB3At2WhCyDo4Pu/EJPLxsWo.e/DG",
+      "passwordHash": "$2b$10$M6YF6U0.2u7MQF5pntdbaOs8XKSxdZnVH/0sI..XU9MxXlCmKUSwe",
       "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
       "createdAt": "2026-01-01T00:00:00.000Z"
     },
@@ -14,6 +14,13 @@
       "email": "joao.silva@teste.com",
       "passwordHash": "$2b$10$3z82spCvXNdZA5kYDT.39es3uT4pY4c1OkqiQW2WvCXesFSTve/.G",
       "createdAt": "2026-11-07T00:30:23.082Z"
+    },
+    {
+      "id": "usr_1794023216044_fl3r6",
+      "name": "Lucas Teste",
+      "email": "lucas.teste@exemplo.com",
+      "passwordHash": "$2b$10$wE2pKeGjZhOIXDzaVT2B4OqJRf8sdMtceg5G09cjuMgLl138AHG6e",
+      "createdAt": "2026-11-07T03:46:56.044Z"
     }
   ],
   "accounts": [

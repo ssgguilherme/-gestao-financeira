@@ -14,6 +14,13 @@
       "email": "joao.silva@teste.com",
       "passwordHash": "$2b$10$3z82spCvXNdZA5kYDT.39es3uT4pY4c1OkqiQW2WvCXesFSTve/.G",
       "createdAt": "2026-11-07T00:30:23.082Z"
+    },
+    {
+      "id": "usr_1794023216044_fl3r6",
+      "name": "Lucas Teste",
+      "email": "lucas.teste@exemplo.com",
+      "passwordHash": "$2b$10$wE2pKeGjZhOIXDzaVT2B4OqJRf8sdMtceg5G09cjuMgLl138AHG6e",
+      "createdAt": "2026-11-07T03:46:56.044Z"
     }
   ],
   "accounts": [
@@ -60,6 +67,17 @@
       "bank": "Banco Principal",
       "icon": "Building2",
       "createdAt": "2026-11-07T00:30:23.083Z"
+    },
+    {
+      "id": "acc_usr_1794023216044_fl3r6_1",
+      "userId": "usr_1794023216044_fl3r6",
+      "name": "Conta Corrente Principal",
+      "type": "checking",
+      "balance": 0,
+      "color": "#3b82f6",
+      "bank": "Banco Principal",
+      "icon": "Building2",
+      "createdAt": "2026-11-07T03:46:56.045Z"
     }
   ],
   "cards": [
@@ -373,6 +391,78 @@
     {
       "id": "cat_usr_1794011423082_5aw1v_9",
       "userId": "usr_1794011423082_5aw1v",
+      "name": "Compras & Assinaturas",
+      "type": "expense",
+      "color": "#f97316",
+      "icon": "ShoppingBag"
+    },
+    {
+      "id": "cat_usr_1794023216044_fl3r6_1",
+      "userId": "usr_1794023216044_fl3r6",
+      "name": "Salário & Renda",
+      "type": "income",
+      "color": "#10b981",
+      "icon": "Briefcase"
+    },
+    {
+      "id": "cat_usr_1794023216044_fl3r6_2",
+      "userId": "usr_1794023216044_fl3r6",
+      "name": "Rendimentos",
+      "type": "income",
+      "color": "#06b6d4",
+      "icon": "TrendingUp"
+    },
+    {
+      "id": "cat_usr_1794023216044_fl3r6_3",
+      "userId": "usr_1794023216044_fl3r6",
+      "name": "Freelance & Extras",
+      "type": "income",
+      "color": "#8b5cf6",
+      "icon": "Zap"
+    },
+    {
+      "id": "cat_usr_1794023216044_fl3r6_4",
+      "userId": "usr_1794023216044_fl3r6",
+      "name": "Moradia & Contas",
+      "type": "expense",
+      "color": "#f59e0b",
+      "icon": "Home"
+    },
+    {
+      "id": "cat_usr_1794023216044_fl3r6_5",
+      "userId": "usr_1794023216044_fl3r6",
+      "name": "Alimentação & Supermercado",
+      "type": "expense",
+      "color": "#ef4444",
+      "icon": "Utensils"
+    },
+    {
+      "id": "cat_usr_1794023216044_fl3r6_6",
+      "userId": "usr_1794023216044_fl3r6",
+      "name": "Transporte & Combustível",
+      "type": "expense",
+      "color": "#3b82f6",
+      "icon": "Car"
+    },
+    {
+      "id": "cat_usr_1794023216044_fl3r6_7",
+      "userId": "usr_1794023216044_fl3r6",
+      "name": "Saúde & Farmácia",
+      "type": "expense",
+      "color": "#ec4899",
+      "icon": "Heart"
+    },
+    {
+      "id": "cat_usr_1794023216044_fl3r6_8",
+      "userId": "usr_1794023216044_fl3r6",
+      "name": "Lazer & Viagens",
+      "type": "expense",
+      "color": "#a855f7",
+      "icon": "Smile"
+    },
+    {
+      "id": "cat_usr_1794023216044_fl3r6_9",
+      "userId": "usr_1794023216044_fl3r6",
       "name": "Compras & Assinaturas",
       "type": "expense",
       "color": "#f97316",
