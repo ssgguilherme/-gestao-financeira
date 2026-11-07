@@ -1,195 +1,148 @@
 import { Response } from 'express';
-import { dbStore } from '../db/store.js';
-import { AuthenticatedRequest } from '../middleware/auth.js';
+import { AuthenticatedRequest } from '../middleware/auth';
+import { store } from '../db/store';
 
-export const getDashboardSummary = (req: AuthenticatedRequest, res: Response) => {
-  const userId = req.userId;
-  const data = dbStore.getData();
+export async function getDashboardData(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
 
-  const userAccounts = data.accounts.filter((a) => a.userId === userId);
-  const userCards = data.cards.filter((c) => c.userId === userId);
-  const userTransactions = data.transactions.filter((t) => t.userId === userId);
-  const userInvestments = data.investments.filter((i) => i.userId === userId);
-  const userFixed = data.fixedAccounts.filter((f) => f.userId === userId && f.active);
+    const accounts = store.getAccountsByUser(userId);
+    const cards = store.getCardsByUser(userId);
+    const transactions = store.getTransactionsByUser(userId);
+    const investments = store.getInvestmentsByUser(userId);
+    const budgets = store.getBudgetsByUser(userId);
+    const goals = store.getGoalsByUser(userId);
+    const notifications = store.getNotificationsByUser(userId);
 
-  const now = new Date();
-  const currentMonth = now.toISOString().substring(0, 7); // YYYY-MM
+    // 1. Saldo Total em Contas
+    const totalBalance = accounts.reduce((sum, acc) => sum + (acc.balance || 0), 0);
 
-  // Total balance in bank accounts
-  const totalBalance = userAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+    // 2. Transações do Mês Atual
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth(); // 0-indexed
 
-  // Filter transactions for current month
-  const monthTransactions = userTransactions.filter((t) => t.date.startsWith(currentMonth));
-
-  // Paid month income and expenses
-  const monthIncome = monthTransactions
-    .filter((t) => t.type === 'receita' && t.status === 'pago')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const monthExpenses = monthTransactions
-    .filter((t) => t.type === 'despesa' && t.status === 'pago')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  // Credit card current bill (expenses on cards in current month)
-  const currentCardBill = userTransactions
-    .filter((t) => t.cardId && t.date.startsWith(currentMonth) && t.type === 'despesa' && t.status === 'pago')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  // Total invested
-  const totalInvested = userInvestments.reduce((sum, inv) => sum + inv.currentAmount, 0);
-
-  // Pending expenses for remainder of month + active fixed accounts not yet paid
-  const pendingMonthExpenses = monthTransactions
-    .filter((t) => t.type === 'despesa' && t.status === 'pendente')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const fixedAccountsPending = userFixed
-    .filter((f) => f.lastProcessedMonth !== currentMonth)
-    .reduce((sum, f) => sum + f.amount, 0);
-
-  const projectedExpenses = monthExpenses + pendingMonthExpenses + fixedAccountsPending;
-  const projectedBalance = totalBalance - (pendingMonthExpenses + fixedAccountsPending);
-
-  const monthSavings = Math.max(0, monthIncome - monthExpenses);
-  const savingsPercentage = monthIncome > 0 ? Math.round((monthSavings / monthIncome) * 100) : 0;
-
-  // Category breakdown for current month expenses
-  const categoryMap: { [key: string]: number } = {};
-  monthTransactions
-    .filter((t) => t.type === 'despesa' && t.status === 'pago')
-    .forEach((t) => {
-      categoryMap[t.category] = (categoryMap[t.category] || 0) + t.amount;
+    const currentMonthTxs = transactions.filter((tx) => {
+      const txDate = new Date(tx.date);
+      return txDate.getFullYear() === currentYear && txDate.getMonth() === currentMonth;
     });
 
-  const categoryChart = Object.keys(categoryMap).map((catName) => {
-    const categoryObj = data.categories.find((c) => c.name === catName);
-    return {
-      category: catName,
-      amount: categoryMap[catName],
-      color: categoryObj?.color || '#3B82F6'
-    };
-  });
+    const monthlyIncome = currentMonthTxs
+      .filter((tx) => tx.type === 'income' && tx.status === 'completed')
+      .reduce((sum, tx) => sum + tx.amount, 0);
 
-  // Recent 6 months history (Receitas x Despesas x Saldo)
-  const monthlyHistory = [];
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const mStr = d.toISOString().substring(0, 7);
-    const monthName = d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+    const monthlyExpense = currentMonthTxs
+      .filter((tx) => tx.type === 'expense' && tx.status === 'completed')
+      .reduce((sum, tx) => sum + tx.amount, 0);
 
-    const mTx = userTransactions.filter((t) => t.date.startsWith(mStr) && t.status === 'pago');
-    const inc = mTx.filter((t) => t.type === 'receita').reduce((s, t) => s + t.amount, 0);
-    const exp = mTx.filter((t) => t.type === 'despesa').reduce((s, t) => s + t.amount, 0);
+    // 3. Cartões de Crédito
+    const totalCreditLimit = cards.reduce((sum, c) => sum + c.limit, 0);
+    const availableCreditLimit = cards.reduce((sum, c) => sum + c.availableLimit, 0);
+    const usedCreditLimit = totalCreditLimit - availableCreditLimit;
 
-    monthlyHistory.push({
-      month: monthName.charAt(0).toUpperCase() + monthName.slice(1),
-      monthKey: mStr,
-      receitas: inc,
-      despesas: exp,
-      saldo: inc - exp
+    // 4. Investimentos
+    const totalInvested = investments.reduce((sum, inv) => sum + inv.amountInvested, 0);
+    const currentInvestmentsValue = investments.reduce((sum, inv) => sum + inv.currentValue, 0);
+    const investmentProfitability = totalInvested > 0
+      ? ((currentInvestmentsValue - totalInvested) / totalInvested) * 100
+      : 0;
+
+    // 5. Despesas por Categoria (para Gráfico Doughnut)
+    const categoryMap: Record<string, number> = {};
+    currentMonthTxs
+      .filter((tx) => tx.type === 'expense')
+      .forEach((tx) => {
+        const cat = tx.category || 'Outros';
+        categoryMap[cat] = (categoryMap[cat] || 0) + tx.amount;
+      });
+
+    const expensesByCategory = Object.entries(categoryMap).map(([category, amount]) => ({
+      category,
+      amount
+    }));
+
+    // 6. Fluxo dos Últimos 6 Meses (para Gráfico de Linha/Barras)
+    const monthlyFlow: Array<{ month: string; income: number; expense: number }> = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const mIdx = d.getMonth();
+      const yVal = d.getFullYear();
+      const monthLabel = d.toLocaleDateString('pt-BR', { month: 'short' });
+
+      const mIncome = transactions
+        .filter((tx) => {
+          const t = new Date(tx.date);
+          return t.getMonth() === mIdx && t.getFullYear() === yVal && tx.type === 'income' && tx.status === 'completed';
+        })
+        .reduce((sum, tx) => sum + tx.amount, 0);
+
+      const mExpense = transactions
+        .filter((tx) => {
+          const t = new Date(tx.date);
+          return t.getMonth() === mIdx && t.getFullYear() === yVal && tx.type === 'expense' && tx.status === 'completed';
+        })
+        .reduce((sum, tx) => sum + tx.amount, 0);
+
+      monthlyFlow.push({
+        month: monthLabel,
+        income: mIncome,
+        expense: mExpense
+      });
+    }
+
+    // 7. Alertas Seguros e Filtrados para o req.userId (sem vazamento de outros usuários)
+    const alerts: Array<{ id: string; title: string; message: string; type: 'info' | 'warning' | 'success' }> = [];
+
+    // Checagem de orçamentos estourados
+    budgets.forEach((b) => {
+      if (b.spent > b.limit) {
+        alerts.push({
+          id: `alert_budget_${b.id}`,
+          title: `Orçamento Excedido: ${b.categoryName}`,
+          message: `Você gastou R$ ${b.spent.toFixed(2)} do teto de R$ ${b.limit.toFixed(2)}.`,
+          type: 'warning'
+        });
+      }
     });
+
+    // Notificações do usuário
+    notifications.forEach((n) => {
+      alerts.push({
+        id: n.id,
+        title: n.title,
+        message: n.message,
+        type: n.type
+      });
+    });
+
+    res.json({
+      summary: {
+        totalBalance,
+        monthlyIncome,
+        monthlyExpense,
+        monthlySavings: monthlyIncome - monthlyExpense,
+        totalCreditLimit,
+        availableCreditLimit,
+        usedCreditLimit,
+        totalInvested,
+        currentInvestmentsValue,
+        investmentProfitability: Number(investmentProfitability.toFixed(2)),
+        accountsCount: accounts.length,
+        cardsCount: cards.length,
+        transactionsCount: transactions.length
+      },
+      recentTransactions: transactions.slice(0, 7),
+      expensesByCategory,
+      monthlyFlow,
+      alerts,
+      goalsSummary: goals.slice(0, 3)
+    });
+  } catch (err: any) {
+    console.error('Erro ao obter dashboard:', err);
+    res.status(500).json({ error: 'Erro ao gerar dados do painel.' });
   }
-
-  // Cards spending breakdown
-  const cardSpending = userCards.map((card) => {
-    const cardExpenses = monthTransactions
-      .filter((t) => t.cardId === card.id && t.type === 'despesa')
-      .reduce((s, t) => s + t.amount, 0);
-    return {
-      cardName: card.name,
-      bank: card.bank,
-      spent: cardExpenses,
-      limit: card.limit,
-      available: card.availableLimit,
-      color: card.color
-    };
-  });
-
-  // Heatmap and Daily History data for the current month
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const heatmapData = [];
-  const dailyHistory = [];
-  let runningBalance = totalBalance; // Starting or tracking cumulative balance
-
-  for (let day = 1; day <= daysInMonth; day++) {
-    const dayStr = `${currentMonth}-${day.toString().padStart(2, '0')}`;
-    const dayTxs = userTransactions.filter((t) => t.date === dayStr);
-    
-    const dayIncome = dayTxs
-      .filter((t) => t.type === 'receita' && t.status === 'pago')
-      .reduce((s, t) => s + t.amount, 0);
-
-    const daySpent = dayTxs
-      .filter((t) => t.type === 'despesa' && t.status === 'pago')
-      .reduce((s, t) => s + t.amount, 0);
-
-    const dayNet = dayIncome - daySpent;
-
-    heatmapData.push({
-      date: dayStr,
-      dayNumber: day,
-      amount: daySpent,
-      income: dayIncome,
-      saldo: dayNet,
-      transactionsCount: dayTxs.length,
-      transactions: dayTxs
-    });
-
-    dailyHistory.push({
-      label: `Dia ${day}`,
-      dayNumber: day,
-      date: dayStr,
-      receitas: dayIncome,
-      despesas: daySpent,
-      saldo: dayNet
-    });
-  }
-
-  // Upcoming due items (transactions or fixed bills)
-  const upcomingDues = [
-    ...userTransactions
-      .filter((t) => t.status === 'pendente' && t.type === 'despesa')
-      .map((t) => ({
-        id: t.id,
-        title: t.description,
-        amount: t.amount,
-        dueDate: t.date,
-        type: 'Lançamento',
-        category: t.category
-      })),
-    ...userFixed
-      .filter((f) => f.lastProcessedMonth !== currentMonth)
-      .map((f) => ({
-        id: f.id,
-        title: f.description,
-        amount: f.amount,
-        dueDate: `${currentMonth}-${f.dueDay.toString().padStart(2, '0')}`,
-        type: 'Conta Fixa',
-        category: f.category
-      }))
-  ].sort((a, b) => a.dueDate.localeCompare(b.dueDate)).slice(0, 5);
-
-  return res.json({
-    metrics: {
-      totalBalance,
-      monthIncome,
-      monthExpenses,
-      currentCardBill,
-      totalInvested,
-      projectedExpenses,
-      projectedBalance,
-      monthSavings,
-      savingsPercentage,
-      activeCardsCount: userCards.length,
-      activeAccountsCount: userAccounts.length
-    },
-    categoryChart,
-    monthlyHistory,
-    dailyHistory,
-    cardSpending,
-    heatmapData,
-    upcomingDues,
-    recentTransactions: userTransactions.slice(-6).reverse(),
-    alerts: data.alerts.filter((a) => !a.read).slice(0, 5)
-  });
-};
+}

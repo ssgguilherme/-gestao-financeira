@@ -1,86 +1,171 @@
 import { Response } from 'express';
-import { dbStore } from '../db/store.js';
-import { AuthenticatedRequest } from '../middleware/auth.js';
-import { Transaction } from '../../src/types.js';
+import { AuthenticatedRequest } from '../middleware/auth';
+import { store } from '../db/store';
 
-export const exportTransactionsCSV = (req: AuthenticatedRequest, res: Response) => {
-  const userId = req.userId;
-  const data = dbStore.getData();
-  const userTx = data.transactions.filter((t) => t.userId === userId);
-
-  let csvContent = 'ID,Data,Descrição,Tipo,Categoria,Valor,Forma de Pagamento,Status,Observação\n';
-
-  userTx.forEach((t) => {
-    const desc = `"${t.description.replace(/"/g, '""')}"`;
-    const obs = t.observation ? `"${t.observation.replace(/"/g, '""')}"` : '""';
-    csvContent += `${t.id},${t.date},${desc},${t.type},${t.category},${t.amount.toFixed(2)},${t.paymentMethod},${t.status},${obs}\n`;
-  });
-
-  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', 'attachment; filename="extrato_financeiro.csv"');
-  return res.send(csvContent);
-};
-
-export const exportDatabaseBackup = (req: AuthenticatedRequest, res: Response) => {
-  const data = dbStore.getData();
-  res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Content-Disposition', `attachment; filename="backup_financeiro_${new Date().toISOString().split('T')[0]}.json"`);
-  return res.json(data);
-};
-
-export const importTransactions = (req: AuthenticatedRequest, res: Response) => {
-  const { transactions } = req.body;
-
-  if (!Array.isArray(transactions) || transactions.length === 0) {
-    return res.status(400).json({ error: 'Nenhum lançamento válido enviado para importação.' });
+/**
+ * Sanitiza valores de texto para evitar CSV Formula Injection (OWASP A03)
+ * Se uma célula começar com '=', '+', '-', '@', '\t', '\r', prefixa com apóstrofo (')
+ */
+function sanitizeCsvValue(val: any): string {
+  if (val === null || val === undefined) return '""';
+  let str = String(val).trim();
+  
+  // Detecção de caracteres executáveis em planilhas (Excel, LibreOffice)
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`;
   }
 
-  let importedCount = 0;
+  // Escapa aspas duplas internas
+  str = str.replace(/"/g, '""');
+  return `"${str}"`;
+}
 
-  dbStore.updateData((db) => {
-    transactions.forEach((tx: Partial<Transaction>) => {
-      if (tx.description && tx.amount) {
-        const newTx: Transaction = {
-          id: `tx_imp_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-          userId: req.userId!,
-          description: tx.description,
-          amount: Math.abs(Number(tx.amount)),
-          type: tx.type || (Number(tx.amount) >= 0 ? 'receita' : 'despesa'),
-          paymentMethod: tx.paymentMethod || 'pix',
-          category: tx.category || 'Outros',
-          date: tx.date || new Date().toISOString().split('T')[0],
-          status: tx.status || 'pago',
-          observation: 'Importado de extrato bancário (CSV/OFX)'
-        };
-        db.transactions.push(newTx);
-        importedCount++;
-      }
+/**
+ * Exporta Backup Seguro Tenant-Scoped (OWASP A01 Corrigido)
+ * Contém SOMENTE os dados do usuário autenticado.
+ * NUNCA exporta hashes de senha, tokens ou dados de outros usuários!
+ */
+export async function exportUserBackup(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.userId;
+    if (!userId || !req.user) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
+    const backupPayload = {
+      version: '2.0.0-tenant-scoped',
+      exportedAt: new Date().toISOString(),
+      user: {
+        id: req.user.id,
+        name: req.user.name,
+        email: req.user.email,
+        createdAt: req.user.createdAt
+      },
+      accounts: store.getAccountsByUser(userId),
+      cards: store.getCardsByUser(userId),
+      transactions: store.getTransactionsByUser(userId),
+      categories: store.getCategoriesByUser(userId),
+      budgets: store.getBudgetsByUser(userId),
+      goals: store.getGoalsByUser(userId),
+      investments: store.getInvestmentsByUser(userId),
+      pixKeys: store.getPixKeysByUser(userId),
+      notifications: store.getNotificationsByUser(userId)
+    };
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="finanflow-backup-${userId}-${Date.now()}.json"`);
+    res.json(backupPayload);
+  } catch (err: any) {
+    console.error('Erro ao exportar backup:', err);
+    res.status(500).json({ error: 'Erro ao gerar backup seguro.' });
+  }
+}
+
+/**
+ * Restaura Backup Seguro Tenant-Scoped (OWASP A01 Corrigido)
+ * Substitui estritamente os dados do usuário autenticado (req.userId).
+ * Não afeta contas de outros usuários no sistema.
+ */
+export async function restoreUserBackup(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
+    const backupData = req.body;
+    if (!backupData || typeof backupData !== 'object') {
+      res.status(400).json({ error: 'Payload de restauração inválido. Envie um JSON válido.' });
+      return;
+    }
+
+    // Executa a restauração isolada
+    store.restoreUserBackup(userId, backupData);
+
+    res.json({
+      message: 'Dados restaurados com sucesso com isolamento estrito de conta!',
+      restoredAt: new Date().toISOString()
     });
-  });
-
-  return res.json({
-    message: `${importedCount} lançamentos importados com sucesso!`,
-    importedCount
-  });
-};
-
-export const restoreDatabaseBackup = (req: AuthenticatedRequest, res: Response) => {
-  const { backupData } = req.body;
-
-  if (!backupData || !backupData.transactions || !backupData.accounts) {
-    return res.status(400).json({ error: 'Arquivo de backup inválido.' });
+  } catch (err: any) {
+    console.error('Erro na restauração:', err);
+    res.status(500).json({ error: 'Falha ao restaurar dados do backup.' });
   }
+}
 
-  dbStore.updateData((db) => {
-    if (backupData.accounts) db.accounts = backupData.accounts;
-    if (backupData.cards) db.cards = backupData.cards;
-    if (backupData.categories) db.categories = backupData.categories;
-    if (backupData.transactions) db.transactions = backupData.transactions;
-    if (backupData.fixedAccounts) db.fixedAccounts = backupData.fixedAccounts;
-    if (backupData.goals) db.goals = backupData.goals;
-    if (backupData.investments) db.investments = backupData.investments;
-    if (backupData.budgets) db.budgets = backupData.budgets;
-  });
+/**
+ * Exporta Extrato em CSV com Sanitização contra Injeção de Fórmulas (OWASP A03 Corrigido)
+ */
+export async function exportCsvReport(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
 
-  return res.json({ message: 'Backup restaurado com sucesso!' });
-};
+    const transactions = store.getTransactionsByUser(userId);
+    const accounts = store.getAccountsByUser(userId);
+    const accountMap = new Map(accounts.map((a) => [a.id, a.name]));
+
+    const headers = [
+      'Data',
+      'Descrição',
+      'Tipo',
+      'Categoria',
+      'Valor (R$)',
+      'Conta / Origem',
+      'Método de Pagamento',
+      'Status',
+      'Observação'
+    ];
+
+    const rows = transactions.map((t) => [
+      sanitizeCsvValue(t.date),
+      sanitizeCsvValue(t.description),
+      sanitizeCsvValue(t.type === 'income' ? 'Receita' : t.type === 'expense' ? 'Despesa' : 'Transferência'),
+      sanitizeCsvValue(t.category),
+      sanitizeCsvValue(t.amount.toFixed(2)),
+      sanitizeCsvValue(t.accountId ? accountMap.get(t.accountId) || 'Conta' : 'Cartão de Crédito'),
+      sanitizeCsvValue(t.paymentMethod),
+      sanitizeCsvValue(t.status === 'completed' ? 'Concluído' : 'Pendente'),
+      sanitizeCsvValue(t.observation || '')
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\r\n');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="extrato-financeiro-${Date.now()}.csv"`);
+    res.send(csvContent);
+  } catch (err: any) {
+    console.error('Erro ao exportar CSV:', err);
+    res.status(500).json({ error: 'Erro ao gerar arquivo CSV.' });
+  }
+}
+
+/**
+ * Resumo Analítico de Relatórios
+ */
+export async function getReportsSummary(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
+    const txs = store.getTransactionsByUser(userId);
+    const totalIncome = txs.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+    const totalExpense = txs.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+
+    res.json({
+      totalIncome,
+      totalExpense,
+      balance: totalIncome - totalExpense,
+      totalCount: txs.length
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Erro ao gerar relatório.' });
+  }
+}

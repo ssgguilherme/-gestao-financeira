@@ -1,122 +1,294 @@
-import React from 'react';
-import { TrendingUp, Plus, ShieldCheck, DollarSign, PieChart as PieIcon, Trash2 } from 'lucide-react';
-import { Investment } from '../types';
+import React, { useState } from 'react';
+import { Investment } from '../types/finance';
+import { api } from '../services/api';
+import {
+  TrendingUp,
+  Plus,
+  ArrowUpRight,
+  ShieldCheck,
+  Calendar,
+  PieChart,
+  DollarSign,
+  X
+} from 'lucide-react';
 
 interface InvestmentsViewProps {
   investments: Investment[];
-  onOpenNewInvestment: () => void;
-  onDeleteInvestment: (id: string) => Promise<void>;
+  onRefresh: () => void;
+  isDarkMode: boolean;
 }
 
 export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
-  investments = [],
-  onOpenNewInvestment,
-  onDeleteInvestment
+  investments,
+  onRefresh,
+  isDarkMode
 }) => {
-  const safeInvestments = Array.isArray(investments) ? investments : [];
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [type, setType] = useState<'cdb' | 'lci_lca' | 'tesouro' | 'stocks' | 'fii' | 'crypto'>('cdb');
+  const [amountInvested, setAmountInvested] = useState('');
+  const [currentValue, setCurrentValue] = useState('');
+  const [profitability, setProfitability] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fmt = (v: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+  const totalInvested = investments.reduce((acc, i) => acc + i.amountInvested, 0);
+  const totalCurrent = investments.reduce((acc, i) => acc + i.currentValue, 0);
+  const totalProfit = totalCurrent - totalInvested;
+  const totalPercent = totalInvested > 0 ? (totalProfit / totalInvested) * 100 : 0;
 
-  const totalApplied = safeInvestments.reduce((s, i) => s + i.appliedAmount, 0);
-  const totalCurrent = safeInvestments.reduce((s, i) => s + i.currentAmount, 0);
-  const totalProfit = totalCurrent - totalApplied;
-  const totalYieldPct = totalApplied > 0 ? ((totalProfit / totalApplied) * 100).toFixed(2) : '0';
+  const formatCurrency = (val: number) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !amountInvested) return;
+
+    setIsSubmitting(true);
+    try {
+      const invested = parseFloat(amountInvested.replace(',', '.'));
+      const current = currentValue ? parseFloat(currentValue.replace(',', '.')) : invested;
+
+      await api.createInvestment({
+        name: name.trim(),
+        type,
+        amountInvested: invested,
+        currentValue: current,
+        profitability: profitability ? parseFloat(profitability.replace(',', '.')) : undefined,
+        dueDate: dueDate || undefined
+      });
+
+      setIsAddOpen(false);
+      setName('');
+      setAmountInvested('');
+      setCurrentValue('');
+      setProfitability('');
+      setDueDate('');
+      onRefresh();
+    } catch (err) {
+      alert('Erro ao cadastrar investimento.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const typeLabels: Record<string, string> = {
+    cdb: 'CDB / Renda Fixa',
+    lci_lca: 'LCI / LCA',
+    tesouro: 'Tesouro Direto',
+    stocks: 'Ações / B3',
+    fii: 'Fundos Imobiliários',
+    crypto: 'Criptoativos'
+  };
 
   return (
-    <div className="space-y-6 pb-12 animate-fadeIn">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl">
+    <div className="space-y-6">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-xs font-semibold text-blue-400 uppercase tracking-widest bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
-            Carteira de Ativos
-          </span>
-          <h1 className="text-2xl font-bold text-slate-100 mt-2">Investimentos</h1>
+          <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
+            <TrendingUp className="w-6 h-6 text-indigo-400" />
+            <span>Carteira de Investimentos</span>
+          </h1>
           <p className="text-xs text-slate-400">
-            Acompanhe a rentabilidade da sua carteira e diversificação.
+            Acompanhe rendimentos da sua carteira diversificada em Renda Fixa, Ações e FIIs.
           </p>
         </div>
+
         <button
-          onClick={onOpenNewInvestment}
-          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all cursor-pointer flex items-center space-x-2"
+          type="button"
+          onClick={() => setIsAddOpen(true)}
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/25 transition-all self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
-          <span>Novo Ativo</span>
+          <span>Novo Investimento</span>
         </button>
       </div>
 
-      {/* Summary KPI */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-          <span className="text-xs text-slate-400 font-medium">Total Aplicado</span>
-          <p className="text-2xl font-extrabold text-slate-100">{fmt(totalApplied)}</p>
+        <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-md">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Total Aportado</div>
+          <div className="text-2xl font-black text-white">{formatCurrency(totalInvested)}</div>
+          <div className="text-[10px] text-slate-400 mt-1">Capital inicial investido</div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-          <span className="text-xs text-slate-400 font-medium">Patrimônio Atual</span>
-          <p className="text-2xl font-extrabold text-blue-400">{fmt(totalCurrent)}</p>
+        <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-md">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Patrimônio Atual</div>
+          <div className="text-2xl font-black text-indigo-400">{formatCurrency(totalCurrent)}</div>
+          <div className="text-[10px] text-slate-400 mt-1">Posição atualizada a mercado</div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-          <span className="text-xs text-slate-400 font-medium">Lucro Total do Portfólio</span>
-          <p className={`text-2xl font-extrabold ${totalProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            {totalProfit >= 0 ? '+' : ''} {fmt(totalProfit)} ({totalYieldPct}%)
-          </p>
+        <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-md">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Rendimento Acumulado</div>
+          <div className="text-2xl font-black text-emerald-400">
+            +{formatCurrency(totalProfit)}{' '}
+            <span className="text-sm font-bold">({totalPercent.toFixed(2)}%)</span>
+          </div>
+          <div className="text-[10px] text-slate-400 mt-1">Lucro global sobre o capital</div>
         </div>
       </div>
 
-      {/* Assets Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {safeInvestments.map((inv) => {
-          const profit = inv.currentAmount - inv.appliedAmount;
-          const profitPct = inv.appliedAmount > 0 ? ((profit / inv.appliedAmount) * 100).toFixed(1) : '0';
+      {/* Table of Investments */}
+      <div className="rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden shadow-md">
+        <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+          <h3 className="text-sm font-bold text-white">Posições Ativas</h3>
+          <span className="text-xs text-slate-400">{investments.length} ativos em carteira</span>
+        </div>
 
-          return (
-            <div
-              key={inv.id}
-              className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-4 hover:border-slate-700 transition-all flex flex-col justify-between"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] uppercase font-extrabold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md">
-                    {inv.type}
-                  </span>
-                  <h3 className="text-base font-bold text-slate-100 mt-1">{inv.title}</h3>
-                  <p className="text-[11px] text-slate-400">{inv.broker}</p>
-                </div>
-                <button
-                  onClick={() => {
-                    if (confirm(`Excluir investimento "${inv.title}"?`)) {
-                      onDeleteInvestment(inv.id);
-                    }
-                  }}
-                  className="p-1.5 text-slate-500 hover:text-red-400 rounded-lg hover:bg-slate-800"
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-800 bg-slate-950/40 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="py-3 px-4">Ativo / Título</th>
+                <th className="py-3 px-4">Classe</th>
+                <th className="py-3 px-4 text-right">Valor Aportado</th>
+                <th className="py-3 px-4 text-right">Valor Atual</th>
+                <th className="py-3 px-4 text-right">Rentabilidade</th>
+                <th className="py-3 px-4 text-center">Vencimento</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800 text-xs">
+              {investments.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                    Nenhum investimento cadastrado ainda.
+                  </td>
+                </tr>
+              ) : (
+                investments.map((inv) => (
+                  <tr key={inv.id} className="hover:bg-slate-800/40 transition-colors">
+                    <td className="py-3.5 px-4 font-bold text-white">{inv.name}</td>
+                    <td className="py-3.5 px-4">
+                      <span className="px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 font-semibold text-[11px]">
+                        {typeLabels[inv.type] || inv.type}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-right text-slate-300">{formatCurrency(inv.amountInvested)}</td>
+                    <td className="py-3.5 px-4 text-right font-bold text-white">{formatCurrency(inv.currentValue)}</td>
+                    <td className="py-3.5 px-4 text-right font-black text-emerald-400">+{inv.profitability}%</td>
+                    <td className="py-3.5 px-4 text-center text-slate-400">
+                      {inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('pt-BR') : 'Liquidez Diária'}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Modal Add Investment */}
+      {isAddOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-6 shadow-2xl relative">
+            <button onClick={() => setIsAddOpen(false)} className="absolute top-5 right-5 text-slate-400 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-lg font-black text-white mb-1">Novo Ativo de Investimento</h2>
+            <p className="text-xs text-slate-400 mb-4">Adicione um título ou ação para controle da carteira.</p>
+
+            <form onSubmit={handleCreate} className="space-y-3">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 mb-1">Nome do Ativo *</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ex: CDB Inter 110% CDI, VALE3..."
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 mb-1">Tipo de Aplicação</label>
+                <select
+                  value={type}
+                  onChange={(e: any) => setType(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <option value="cdb">CDB / Renda Fixa</option>
+                  <option value="lci_lca">LCI / LCA</option>
+                  <option value="tesouro">Tesouro Direto</option>
+                  <option value="stocks">Ações / B3</option>
+                  <option value="fii">Fundos Imobiliários (FIIs)</option>
+                  <option value="crypto">Criptoativos</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-400 mb-1">Valor Aportado (R$) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="1"
+                    value={amountInvested}
+                    onChange={(e) => setAmountInvested(e.target.value)}
+                    placeholder="0,00"
+                    required
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-400 mb-1">Valor Atual (R$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={currentValue}
+                    onChange={(e) => setCurrentValue(e.target.value)}
+                    placeholder="Igual ao aporte se recente"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-400 mb-1">Rentabilidade (%)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={profitability}
+                    onChange={(e) => setProfitability(e.target.value)}
+                    placeholder="Ex: 11.5"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-400 mb-1">Data de Vencimento</label>
+                  <input
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                  Salvar Ativo
                 </button>
               </div>
-
-              <div className="grid grid-cols-2 gap-2 bg-slate-800/60 p-3 rounded-2xl text-xs">
-                <div>
-                  <span className="text-[10px] text-slate-400 block">Aplicado</span>
-                  <span className="font-bold text-slate-200">{fmt(inv.appliedAmount)}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 block">Valor Atual</span>
-                  <span className="font-extrabold text-blue-400">{fmt(inv.currentAmount)}</span>
-                </div>
-              </div>
-
-              <div className="pt-2 flex items-center justify-between text-xs">
-                <span className="text-slate-400">Rendimento Acumulado:</span>
-                <span className={`font-bold ${profit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {profit >= 0 ? '+' : ''}{fmt(profit)} ({profitPct}%)
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

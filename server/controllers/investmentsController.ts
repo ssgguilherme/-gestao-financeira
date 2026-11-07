@@ -1,83 +1,56 @@
 import { Response } from 'express';
-import { dbStore } from '../db/store.js';
-import { AuthenticatedRequest } from '../middleware/auth.js';
-import { Investment } from '../../src/types.js';
+import { AuthenticatedRequest } from '../middleware/auth';
+import { store, Investment } from '../db/store';
 
-export const getInvestments = (req: AuthenticatedRequest, res: Response) => {
-  const data = dbStore.getData();
-  const userInvestments = data.investments.filter((i) => i.userId === req.userId);
-  return res.json(userInvestments);
-};
-
-export const createInvestment = (req: AuthenticatedRequest, res: Response) => {
-  const { title, type, appliedAmount, currentAmount, yieldRate, broker, date, color } = req.body;
-
-  if (!title || !type || appliedAmount === undefined) {
-    return res.status(400).json({ error: 'Título, Tipo e Valor Aplicado são obrigatórios.' });
-  }
-
-  const appVal = Number(appliedAmount);
-  const curVal = currentAmount !== undefined ? Number(currentAmount) : appVal;
-
-  const newInv: Investment = {
-    id: `inv_${Date.now()}`,
-    userId: req.userId!,
-    title,
-    type,
-    appliedAmount: appVal,
-    currentAmount: curVal,
-    yieldRate: yieldRate ? Number(yieldRate) : 0,
-    broker: broker || 'Outros',
-    date: date || new Date().toISOString().split('T')[0],
-    color: color || '#22C55E'
-  };
-
-  dbStore.updateData((db) => {
-    db.investments.push(newInv);
-  });
-
-  return res.status(201).json(newInv);
-};
-
-export const updateInvestment = (req: AuthenticatedRequest, res: Response) => {
-  const { id } = req.params;
-  const { title, currentAmount, yieldRate, broker } = req.body;
-
-  let updated: Investment | null = null;
-
-  dbStore.updateData((db) => {
-    const inv = db.investments.find((i) => i.id === id && i.userId === req.userId);
-    if (inv) {
-      if (title) inv.title = title;
-      if (currentAmount !== undefined) inv.currentAmount = Number(currentAmount);
-      if (yieldRate !== undefined) inv.yieldRate = Number(yieldRate);
-      if (broker) inv.broker = broker;
-      updated = inv;
+export async function getInvestments(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
     }
-  });
-
-  if (!updated) {
-    return res.status(404).json({ error: 'Investimento não encontrado.' });
+    const investments = store.getInvestmentsByUser(userId);
+    res.json({ investments });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao listar investimentos.' });
   }
+}
 
-  return res.json(updated);
-};
-
-export const deleteInvestment = (req: AuthenticatedRequest, res: Response) => {
-  const { id } = req.params;
-
-  let deleted = false;
-  dbStore.updateData((db) => {
-    const idx = db.investments.findIndex((i) => i.id === id && i.userId === req.userId);
-    if (idx !== -1) {
-      db.investments.splice(idx, 1);
-      deleted = true;
+export async function createInvestment(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
     }
-  });
 
-  if (!deleted) {
-    return res.status(404).json({ error: 'Investimento não encontrado.' });
+    const { name, type, amountInvested, currentValue, profitability, dueDate } = req.body;
+    if (!name || amountInvested === undefined) {
+      res.status(400).json({ error: 'Nome e valor investido são obrigatórios.' });
+      return;
+    }
+
+    const parsedInvested = Math.abs(Number(amountInvested));
+    const parsedCurrent = currentValue !== undefined ? Number(currentValue) : parsedInvested;
+    const calcProfit = parsedInvested > 0 ? ((parsedCurrent - parsedInvested) / parsedInvested) * 100 : 0;
+
+    const newInv: Investment = {
+      id: `inv_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      userId,
+      name: String(name).trim(),
+      type: type || 'cdb',
+      amountInvested: parsedInvested,
+      currentValue: parsedCurrent,
+      profitability: profitability !== undefined ? Number(profitability) : Number(calcProfit.toFixed(2)),
+      dueDate: dueDate || undefined,
+      createdAt: new Date().toISOString()
+    };
+
+    store.getData().investments.push(newInv);
+    store.save();
+
+    res.status(201).json({ message: 'Investimento adicionado com sucesso!', investment: newInv });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao criar investimento.' });
   }
-
-  return res.json({ message: 'Investimento removido com sucesso.' });
-};
+}

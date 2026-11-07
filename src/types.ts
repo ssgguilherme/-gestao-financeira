@@ -1,175 +1,107 @@
-export type AccountType = 'corrente' | 'poupanca' | 'pagamentos' | 'investimentos' | 'outros';
+export type AppointmentStatus = 'pendente' | 'realizado' | 'falta' | 'cancelado';
 
-export type CardBrand = 'mastercard' | 'visa' | 'elo' | 'amex' | 'outros';
+export type QuestionType = 'texto' | 'textarea' | 'numero' | 'select' | 'checkbox' | 'radio';
 
-export type TransactionType = 'receita' | 'despesa' | 'transferencia' | 'investimento';
-
-export type PaymentMethod = 'pix' | 'ted' | 'doc' | 'dinheiro' | 'cartao_debito' | 'cartao_credito';
-
-export type TransactionStatus = 'pago' | 'pendente' | 'cancelado';
-
-export type InvestmentType = 'tesouro' | 'cdb' | 'lci' | 'lca' | 'fundos' | 'acoes' | 'fiis' | 'cripto';
-
-export interface User {
+export interface AnamneseQuestion {
   id: string;
-  name: string;
+  pergunta: string;
+  tipo: QuestionType;
+  ordem: number;
+  opcoes?: string[];
+  placeholder?: string;
+  obrigatoria: boolean;
+  categoria?: 'saude' | 'habitos' | 'historico' | 'objetivos' | 'personalizado';
+}
+
+export interface StudentAnamnese {
+  idade: number;
+  peso: number; // in kg
+  altura: number; // in meters (e.g. 1.75)
+  objetivoPrincipal: string;
+  praticaMusculacao: 'nunca' | 'iniciante' | 'intermediario' | 'avancado';
+  problemasColunaArticulacao: boolean;
+  problemasColunaDetalhes?: string;
+  cirurgiasPrevias: boolean;
+  cirurgiasDetalhes?: string;
+  hipertensaoOuCardiaco: boolean;
+  diabetes: boolean;
+  medicamentosContinuos: string;
+  fumante: boolean;
+  consumoAlcool: 'nunca' | 'socialmente' | 'frequente';
+  restricaoMedica: string;
+  respostasDinamicas: Record<string, string | string[]>;
+  observacoes?: string;
+}
+
+export interface Appointment {
+  id: string;
+  alunoNome: string;
+  alunoWhatsapp: string;
+  alunoEmail?: string;
+  data: string; // YYYY-MM-DD
+  horario: string; // HH:mm
+  turno: 'manha' | 'tarde';
+  status: AppointmentStatus;
+  objetivo: string;
+  anamnese: StudentAnamnese;
+  criadoEm: string;
+}
+
+export interface PersonalProfile {
+  nome: string;
+  titulo: string;
+  bio: string;
+  whatsapp: string;
   email: string;
-  avatarUrl?: string;
-  companyName?: string;
-  companyDocument?: string;
-  businessType?: 'pf' | 'pj' | 'mei' | 'autonomo' | string;
-  occupation?: string;
-  phone?: string;
-  cityState?: string;
-  address?: string;
-  monthlyRevenueTarget?: number;
-  financialNotes?: string;
-  createdAt: string;
+  slug: string; // e.g. "lucassilva"
+  fotoUrl?: string;
+  cidade: string;
+  cref: string;
 }
 
-export type UpdateUserProfilePayload = {
-  name?: string;
-  email?: string;
-  avatarUrl?: string;
-  companyName?: string;
-  companyDocument?: string;
-  businessType?: string;
-  occupation?: string;
-  phone?: string;
-  cityState?: string;
-  address?: string;
-  monthlyRevenueTarget?: number;
-  financialNotes?: string;
-};
-
-export interface BankAccount {
-  id: string;
-  userId: string;
-  name: string;
-  type: AccountType;
-  balance: number;
-  initialBalance: number;
-  color: string;
-  icon: string;
-  accountNumber?: string;
-  bankName: string;
+export interface ScheduleConfig {
+  frequencyMode: 'last_week' | 'all_weeks' | 'custom_dates';
+  duracaoMinutos: number;
+  diasAtivos: {
+    seg: boolean;
+    ter: boolean;
+    qua: boolean;
+    qui: boolean;
+    sex: boolean;
+    sab: boolean;
+    dom: boolean;
+  };
+  horarioManhaInicio: string;
+  horarioManhaFim: string;
+  horarioTardeInicio: string;
+  horarioTardeFim: string;
+  intervaloAlmoco: boolean;
+  capacidadePorHorario: number;
 }
 
-export interface CreditCard {
-  id: string;
-  userId: string;
-  name: string;
-  bank: string;
-  limit: number;
-  availableLimit: number;
-  closingDay: number;
-  dueDay: number;
-  color: string;
-  brand: CardBrand;
-  lastDigits?: string;
-}
-
-export interface Category {
-  id: string;
-  userId: string;
-  name: string;
-  type: 'receita' | 'despesa' | 'ambos';
-  color: string;
-  icon: string;
-  budgetLimit?: number;
-}
-
-export interface InstallmentInfo {
-  totalInstallments: number;
-  currentInstallment: number;
-  installmentAmount: number;
-  parentTransactionId?: string;
-}
-
-export interface Transaction {
-  id: string;
-  userId: string;
-  description: string;
-  amount: number;
-  type: TransactionType;
-  paymentMethod: PaymentMethod;
-  category: string; // Category name or ID
-  accountId?: string;
-  cardId?: string;
-  date: string; // YYYY-MM-DD
-  status: TransactionStatus;
-  observation?: string;
-  attachmentUrl?: string;
-  installment?: InstallmentInfo;
-  pixKey?: string;
-}
-
-export interface FixedAccount {
-  id: string;
-  userId: string;
-  description: string;
-  amount: number;
-  category: string;
-  accountId: string;
-  dueDay: number;
-  autoProcess: boolean;
-  active: boolean;
-  lastProcessedMonth?: string; // YYYY-MM
-}
-
-export interface FinancialGoal {
-  id: string;
-  userId: string;
+export interface VideoScene {
+  id: number;
   title: string;
-  targetAmount: number;
-  currentAmount: number;
-  deadline: string; // YYYY-MM-DD
-  color: string;
-  category?: string;
+  subtitle: string;
+  durationSeconds: number;
+  narrationText: string;
+  focusedFeature: string;
+  cameraTarget: 'overview' | 'metrics' | 'charts' | 'table' | 'anamnese' | 'questions' | 'schedule' | 'client_wizard' | 'whatsapp';
+  zoomLevel: number;
+  cursorActions: Array<{
+    timestampRatio: number; // 0 to 1
+    xPercent: number; // 0 to 100
+    yPercent: number; // 0 to 100
+    action: 'move' | 'click' | 'highlight' | 'type';
+    label?: string;
+  }>;
+  highlightBoxes?: Array<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    title: string;
+  }>;
 }
 
-export interface Investment {
-  id: string;
-  userId: string;
-  title: string;
-  type: InvestmentType;
-  appliedAmount: number;
-  currentAmount: number;
-  yieldRate: number; // percentage e.g. 10.5
-  broker: string;
-  date: string; // YYYY-MM-DD
-  color: string;
-}
-
-export interface Budget {
-  id: string;
-  userId: string;
-  category: string;
-  monthlyLimit: number;
-  currentSpent: number;
-}
-
-export type BudgetCategory = Budget;
-
-export interface Alert {
-  id: string;
-  title: string;
-  message: string;
-  type: 'danger' | 'warning' | 'info' | 'success';
-  createdAt: string;
-  read: boolean;
-}
-
-export interface DashboardMetrics {
-  totalBalance: number;
-  monthIncome: number;
-  monthExpenses: number;
-  currentCardBill: number;
-  totalInvested: number;
-  projectedExpenses: number;
-  projectedBalance: number;
-  monthSavings: number;
-  savingsPercentage: number;
-  activeCardsCount: number;
-  activeAccountsCount: number;
-}
+export type AppViewMode = 'video_showcase' | 'admin_live' | 'client_live' | 'script_guide';

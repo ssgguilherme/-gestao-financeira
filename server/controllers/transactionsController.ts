@@ -1,228 +1,194 @@
 import { Response } from 'express';
-import { dbStore } from '../db/store.js';
-import { AuthenticatedRequest } from '../middleware/auth.js';
-import { Transaction } from '../../src/types.js';
+import { AuthenticatedRequest } from '../middleware/auth';
+import { store, Transaction } from '../db/store';
 
-export const getTransactions = (req: AuthenticatedRequest, res: Response) => {
-  const userId = req.userId;
-  const { search, type, status, category, accountId, cardId, startDate, endDate, paymentMethod } = req.query;
+export async function getTransactions(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
 
-  const data = dbStore.getData();
-  let userTx = data.transactions.filter((t) => t.userId === userId);
+    let txs = store.getTransactionsByUser(userId);
 
-  if (search) {
-    const q = (search as string).toLowerCase();
-    userTx = userTx.filter(
-      (t) =>
+    const { type, category, accountId, cardId, search, startDate, endDate } = req.query;
+
+    if (type && typeof type === 'string' && type !== 'all') {
+      txs = txs.filter((t) => t.type === type);
+    }
+
+    if (category && typeof category === 'string' && category !== 'all') {
+      txs = txs.filter((t) => t.category.toLowerCase() === category.toLowerCase());
+    }
+
+    if (accountId && typeof accountId === 'string' && accountId !== 'all') {
+      txs = txs.filter((t) => t.accountId === accountId);
+    }
+
+    if (cardId && typeof cardId === 'string' && cardId !== 'all') {
+      txs = txs.filter((t) => t.cardId === cardId);
+    }
+
+    if (search && typeof search === 'string') {
+      const q = search.toLowerCase();
+      txs = txs.filter((t) =>
         t.description.toLowerCase().includes(q) ||
-        t.category.toLowerCase().includes(q) ||
-        (t.observation && t.observation.toLowerCase().includes(q))
-    );
-  }
+        (t.observation && t.observation.toLowerCase().includes(q)) ||
+        t.category.toLowerCase().includes(q)
+      );
+    }
 
-  if (type) {
-    userTx = userTx.filter((t) => t.type === type);
-  }
+    if (startDate && typeof startDate === 'string') {
+      txs = txs.filter((t) => t.date >= startDate);
+    }
 
-  if (status) {
-    userTx = userTx.filter((t) => t.status === status);
-  }
+    if (endDate && typeof endDate === 'string') {
+      txs = txs.filter((t) => t.date <= endDate);
+    }
 
-  if (category) {
-    userTx = userTx.filter((t) => t.category === category);
-  }
-
-  if (accountId) {
-    userTx = userTx.filter((t) => t.accountId === accountId);
-  }
-
-  if (cardId) {
-    userTx = userTx.filter((t) => t.cardId === cardId);
-  }
-
-  if (paymentMethod) {
-    userTx = userTx.filter((t) => t.paymentMethod === paymentMethod);
-  }
-
-  if (startDate) {
-    userTx = userTx.filter((t) => t.date >= (startDate as string));
-  }
-
-  if (endDate) {
-    userTx = userTx.filter((t) => t.date <= (endDate as string));
-  }
-
-  // Sort newest first
-  userTx.sort((a, b) => b.date.localeCompare(a.date));
-
-  return res.json(userTx);
-};
-
-export const createTransaction = (req: AuthenticatedRequest, res: Response) => {
-  const {
-    description,
-    amount,
-    type,
-    paymentMethod,
-    category,
-    accountId,
-    cardId,
-    date,
-    status,
-    observation,
-    attachmentUrl,
-    pixKey,
-    installmentsCount
-  } = req.body;
-
-  if (!description || amount === undefined || !type || !category || !date) {
-    return res.status(400).json({
-      error: 'Descrição, Valor, Tipo, Categoria e Data são obrigatórios.'
+    res.json({
+      transactions: txs,
+      total: txs.length
     });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Erro ao buscar transações.' });
   }
+}
 
-  const numAmount = Number(amount);
-  const numInstallments = installmentsCount ? Number(installmentsCount) : 1;
-  const createdTransactions: Transaction[] = [];
+export async function createTransaction(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
 
-  dbStore.updateData((db) => {
-    const parentId = `tx_${Date.now()}`;
+    const {
+      description,
+      amount,
+      type,
+      category,
+      date,
+      paymentMethod,
+      accountId,
+      cardId,
+      status,
+      observation
+    } = req.body;
 
-    if (numInstallments > 1 && type === 'despesa') {
-      const installmentAmount = Number((numAmount / numInstallments).toFixed(2));
-      const baseDate = new Date(date);
+    if (!description || amount === undefined || !type || !category) {
+      res.status(400).json({ error: 'Campos obrigatórios: descrição, valor, tipo e categoria.' });
+      return;
+    }
 
-      for (let i = 1; i <= numInstallments; i++) {
-        const itemDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + (i - 1), baseDate.getDate());
-        const itemDateStr = itemDate.toISOString().split('T')[0];
+    const parsedAmount = Math.abs(Number(amount));
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      res.status(400).json({ error: 'O valor da transação deve ser positivo e maior que zero.' });
+      return;
+    }
 
-        const txItem: Transaction = {
-          id: i === 1 ? parentId : `${parentId}_p${i}`,
-          userId: req.userId!,
-          description: `${description} (${i}/${numInstallments})`,
-          amount: installmentAmount,
-          type: 'despesa',
-          paymentMethod: paymentMethod || 'cartao_credito',
-          category,
-          accountId,
-          cardId,
-          date: itemDateStr,
-          status: i === 1 ? (status || 'pago') : 'pendente',
-          observation,
-          attachmentUrl,
-          installment: {
-            totalInstallments: numInstallments,
-            currentInstallment: i,
-            installmentAmount,
-            parentTransactionId: parentId
-          }
-        };
-
-        db.transactions.push(txItem);
-        createdTransactions.push(txItem);
-
-        // Adjust card or account balances if needed
-        if (i === 1 && txItem.status === 'pago') {
-          if (cardId) {
-            const card = db.cards.find((c) => c.id === cardId);
-            if (card) {
-              card.availableLimit = Math.max(0, card.availableLimit - installmentAmount);
-            }
-          } else if (accountId) {
-            const acc = db.accounts.find((a) => a.id === accountId);
-            if (acc) {
-              acc.balance -= installmentAmount;
-            }
-          }
-        }
+    // --- PROTEÇÃO CONTRA IDOR (OWASP A01) ---
+    // Se accountId foi fornecido, verifica se a conta realmente pertence ao req.userId!
+    if (accountId) {
+      const userAccounts = store.getAccountsByUser(userId);
+      const ownsAccount = userAccounts.some((a) => a.id === accountId);
+      if (!ownsAccount) {
+        res.status(403).json({
+          error: 'Acesso negado (IDOR)',
+          message: 'A conta bancária informada não pertence ao usuário autenticado.'
+        });
+        return;
       }
-    } else {
-      // Single Transaction
-      const singleTx: Transaction = {
-        id: parentId,
-        userId: req.userId!,
-        description,
-        amount: numAmount,
-        type,
-        paymentMethod: paymentMethod || 'pix',
-        category,
-        accountId,
-        cardId,
-        date,
-        status: status || 'pago',
-        observation,
-        attachmentUrl,
-        pixKey
-      };
+    }
 
-      db.transactions.push(singleTx);
-      createdTransactions.push(singleTx);
+    // Se cardId foi fornecido, verifica se o cartão realmente pertence ao req.userId!
+    if (cardId) {
+      const userCards = store.getCardsByUser(userId);
+      const ownsCard = userCards.some((c) => c.id === cardId);
+      if (!ownsCard) {
+        res.status(403).json({
+          error: 'Acesso negado (IDOR)',
+          message: 'O cartão de crédito informado não pertence ao usuário autenticado.'
+        });
+        return;
+      }
+    }
 
-      // Update account or card balance if paid
-      if (singleTx.status === 'pago') {
-        if (type === 'receita' && accountId) {
-          const acc = db.accounts.find((a) => a.id === accountId);
-          if (acc) acc.balance += numAmount;
-        } else if (type === 'despesa') {
-          if (cardId) {
-            const card = db.cards.find((c) => c.id === cardId);
-            if (card) card.availableLimit = Math.max(0, card.availableLimit - numAmount);
-          } else if (accountId) {
-            const acc = db.accounts.find((a) => a.id === accountId);
-            if (acc) acc.balance -= numAmount;
-          }
+    const newTx: Transaction = {
+      id: `tx_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      userId,
+      accountId,
+      cardId,
+      description: String(description).trim(),
+      amount: parsedAmount,
+      type,
+      category: String(category).trim(),
+      date: date || new Date().toISOString().split('T')[0],
+      paymentMethod: paymentMethod || 'pix',
+      status: status || 'completed',
+      observation: observation ? String(observation).trim() : undefined,
+      createdAt: new Date().toISOString()
+    };
+
+    // Atualiza saldo da conta se a transação estiver completada
+    if (newTx.status === 'completed' && accountId) {
+      const account = store.getAccountsByUser(userId).find((a) => a.id === accountId);
+      if (account) {
+        if (newTx.type === 'income') {
+          account.balance += parsedAmount;
+        } else if (newTx.type === 'expense') {
+          account.balance -= parsedAmount;
         }
       }
     }
-  });
 
-  return res.status(201).json(createdTransactions[0]);
-};
-
-export const updateTransaction = (req: AuthenticatedRequest, res: Response) => {
-  const { id } = req.params;
-  const { description, amount, type, category, accountId, cardId, date, status, observation } = req.body;
-
-  let updatedTx: Transaction | null = null;
-
-  dbStore.updateData((db) => {
-    const tx = db.transactions.find((t) => t.id === id && t.userId === req.userId);
-    if (tx) {
-      if (description) tx.description = description;
-      if (amount !== undefined) tx.amount = Number(amount);
-      if (type) tx.type = type;
-      if (category) tx.category = category;
-      if (accountId !== undefined) tx.accountId = accountId;
-      if (cardId !== undefined) tx.cardId = cardId;
-      if (date) tx.date = date;
-      if (status) tx.status = status;
-      if (observation !== undefined) tx.observation = observation;
-      updatedTx = tx;
+    // Atualiza limite do cartão de crédito se for despesa no cartão
+    if (newTx.status === 'completed' && cardId && newTx.type === 'expense') {
+      const card = store.getCardsByUser(userId).find((c) => c.id === cardId);
+      if (card) {
+        card.availableLimit = Math.max(0, card.availableLimit - parsedAmount);
+      }
     }
-  });
 
-  if (!updatedTx) {
-    return res.status(404).json({ error: 'Lançamento não encontrado.' });
-  }
-
-  return res.json(updatedTx);
-};
-
-export const deleteTransaction = (req: AuthenticatedRequest, res: Response) => {
-  const { id } = req.params;
-
-  let deleted = false;
-  dbStore.updateData((db) => {
-    const idx = db.transactions.findIndex((t) => t.id === id && t.userId === req.userId);
-    if (idx !== -1) {
-      db.transactions.splice(idx, 1);
-      deleted = true;
+    // Atualiza gasto no orçamento da categoria se houver
+    const budget = store.getBudgetsByUser(userId).find(
+      (b) => b.categoryName.toLowerCase() === newTx.category.toLowerCase()
+    );
+    if (budget && newTx.type === 'expense') {
+      budget.spent += parsedAmount;
     }
-  });
 
-  if (!deleted) {
-    return res.status(404).json({ error: 'Lançamento não encontrado.' });
+    store.addTransaction(newTx);
+
+    res.status(201).json({
+      message: 'Transação adicionada com sucesso!',
+      transaction: newTx
+    });
+  } catch (err: any) {
+    console.error('Erro ao criar transação:', err);
+    res.status(500).json({ error: 'Erro ao cadastrar transação.' });
   }
+}
 
-  return res.json({ message: 'Lançamento excluído com sucesso.' });
-};
+export async function deleteTransaction(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.userId;
+    const { id } = req.params;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
+    const success = store.deleteTransaction(id, userId);
+    if (!success) {
+      res.status(404).json({ error: 'Transação não encontrada ou você não tem permissão para excluí-la.' });
+      return;
+    }
+
+    res.json({ message: 'Transação excluída com sucesso!' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Erro ao excluir transação.' });
+  }
+}

@@ -1,84 +1,135 @@
 import { Response } from 'express';
-import { dbStore } from '../db/store.js';
-import { AuthenticatedRequest } from '../middleware/auth.js';
-import { FinancialGoal } from '../../src/types.js';
+import { AuthenticatedRequest } from '../middleware/auth';
+import { store, Goal, Budget } from '../db/store';
 
-export const getGoals = (req: AuthenticatedRequest, res: Response) => {
-  const data = dbStore.getData();
-  const userGoals = data.goals.filter((g) => g.userId === req.userId);
-  return res.json(userGoals);
-};
-
-export const createGoal = (req: AuthenticatedRequest, res: Response) => {
-  const { title, targetAmount, currentAmount, deadline, color, category } = req.body;
-
-  if (!title || !targetAmount || !deadline) {
-    return res.status(400).json({ error: 'Título, valor alvo e prazo são obrigatórios.' });
-  }
-
-  const newGoal: FinancialGoal = {
-    id: `goal_${Date.now()}`,
-    userId: req.userId!,
-    title,
-    targetAmount: Number(targetAmount),
-    currentAmount: currentAmount ? Number(currentAmount) : 0,
-    deadline,
-    color: color || '#3B82F6',
-    category: category || 'Geral'
-  };
-
-  dbStore.updateData((db) => {
-    db.goals.push(newGoal);
-  });
-
-  return res.status(201).json(newGoal);
-};
-
-export const depositGoal = (req: AuthenticatedRequest, res: Response) => {
-  const { id } = req.params;
-  const { amount, action } = req.body; // action: 'add' or 'subtract'
-
-  if (!amount || Number(amount) <= 0) {
-    return res.status(400).json({ error: 'Informe um valor válido maior que zero.' });
-  }
-
-  let updatedGoal: FinancialGoal | null = null;
-  const val = Number(amount);
-
-  dbStore.updateData((db) => {
-    const goal = db.goals.find((g) => g.id === id && g.userId === req.userId);
-    if (goal) {
-      if (action === 'subtract') {
-        goal.currentAmount = Math.max(0, goal.currentAmount - val);
-      } else {
-        goal.currentAmount += val;
-      }
-      updatedGoal = goal;
+// --- METAS FINANCEIRAS ---
+export async function getGoals(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
     }
-  });
-
-  if (!updatedGoal) {
-    return res.status(404).json({ error: 'Meta não encontrada.' });
+    const goals = store.getGoalsByUser(userId);
+    res.json({ goals });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao listar metas.' });
   }
+}
 
-  return res.json(updatedGoal);
-};
-
-export const deleteGoal = (req: AuthenticatedRequest, res: Response) => {
-  const { id } = req.params;
-
-  let deleted = false;
-  dbStore.updateData((db) => {
-    const idx = db.goals.findIndex((g) => g.id === id && g.userId === req.userId);
-    if (idx !== -1) {
-      db.goals.splice(idx, 1);
-      deleted = true;
+export async function createGoal(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
     }
-  });
 
-  if (!deleted) {
-    return res.status(404).json({ error: 'Meta não encontrada.' });
+    const { title, targetAmount, currentAmount, deadline, color, icon } = req.body;
+    if (!title || !targetAmount) {
+      res.status(400).json({ error: 'Título e valor alvo são obrigatórios.' });
+      return;
+    }
+
+    const newGoal: Goal = {
+      id: `goal_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      userId,
+      title: String(title).trim(),
+      targetAmount: Math.abs(Number(targetAmount)),
+      currentAmount: Math.abs(Number(currentAmount)) || 0,
+      deadline: deadline || new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      color: color || '#10b981',
+      icon: icon || 'Target',
+      createdAt: new Date().toISOString()
+    };
+
+    store.getData().goals.push(newGoal);
+    store.save();
+
+    res.status(201).json({ message: 'Meta criada com sucesso!', goal: newGoal });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao criar meta.' });
   }
+}
 
-  return res.json({ message: 'Meta removida com sucesso.' });
-};
+export async function updateGoalDeposit(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.userId;
+    const { id } = req.params;
+    const { amount } = req.body;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
+    const goal = store.getGoalsByUser(userId).find((g) => g.id === id);
+    if (!goal) {
+      res.status(404).json({ error: 'Meta não encontrada.' });
+      return;
+    }
+
+    const deposit = Number(amount);
+    if (isNaN(deposit) || deposit <= 0) {
+      res.status(400).json({ error: 'Informe um valor de aporte positivo.' });
+      return;
+    }
+
+    goal.currentAmount += deposit;
+    store.save();
+
+    res.json({ message: 'Aporte realizado com sucesso!', goal });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao realizar aporte na meta.' });
+  }
+}
+
+// --- ORÇAMENTOS POR CATEGORIA ---
+export async function getBudgets(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+    const budgets = store.getBudgetsByUser(userId);
+    res.json({ budgets });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao listar orçamentos.' });
+  }
+}
+
+export async function createBudget(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
+    const { categoryName, limit } = req.body;
+    if (!categoryName || !limit) {
+      res.status(400).json({ error: 'Nome da categoria e limite são obrigatórios.' });
+      return;
+    }
+
+    const now = new Date();
+    const newBudget: Budget = {
+      id: `bdg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      userId,
+      categoryId: `cat_${Date.now()}`,
+      categoryName: String(categoryName).trim(),
+      limit: Math.abs(Number(limit)),
+      spent: 0,
+      month: now.getMonth() + 1,
+      year: now.getFullYear()
+    };
+
+    store.getData().budgets.push(newBudget);
+    store.save();
+
+    res.status(201).json({ message: 'Orçamento definido com sucesso!', budget: newBudget });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao definir orçamento.' });
+  }
+}

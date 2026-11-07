@@ -1,6 +1,6 @@
 {
-  "name": "Gestão Financeira Pessoal",
-  "description": "Sistema de gestão financeira pessoal completo estilo Nubank/Inter com controle de contas, cartões, PIX, orçamentos, metas, investimentos e gráficos.",
+  "name": "Apresentação e Vídeo - Sistema de Agendamento Personal Trainer",
+  "description": "Vídeo interativo, tour demonstrativo narrado e simulador completo do Sistema de Agendamento e Gestão para Personal Trainers.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

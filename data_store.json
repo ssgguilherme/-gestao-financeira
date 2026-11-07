@@ -1,0 +1,541 @@
+{
+  "users": [
+    {
+      "id": "usr_demo_1",
+      "name": "Sérgio Guilherme",
+      "email": "demo@finanflow.com",
+      "passwordHash": "$2b$10$M6YF6U0.2u7MQF5pntdbaOs8XKSxdZnVH/0sI..XU9MxXlCmKUSwe",
+      "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "usr_1794011423082_5aw1v",
+      "name": "João Silva",
+      "email": "joao.silva@teste.com",
+      "passwordHash": "$2b$10$3z82spCvXNdZA5kYDT.39es3uT4pY4c1OkqiQW2WvCXesFSTve/.G",
+      "createdAt": "2026-11-07T00:30:23.082Z"
+    }
+  ],
+  "accounts": [
+    {
+      "id": "acc_nubank",
+      "userId": "usr_demo_1",
+      "name": "Nubank Conta Digital",
+      "type": "checking",
+      "balance": 4850.75,
+      "color": "#820ad1",
+      "bank": "Nubank",
+      "icon": "CreditCard",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "acc_itau",
+      "userId": "usr_demo_1",
+      "name": "Itaú Unibanco",
+      "type": "checking",
+      "balance": 12430.5,
+      "color": "#ec7000",
+      "bank": "Itaú",
+      "icon": "Building2",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "acc_wallet",
+      "userId": "usr_demo_1",
+      "name": "Carteira Física",
+      "type": "wallet",
+      "balance": 380,
+      "color": "#10b981",
+      "bank": "Dinheiro",
+      "icon": "Wallet",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "acc_usr_1794011423082_5aw1v_1",
+      "userId": "usr_1794011423082_5aw1v",
+      "name": "Conta Corrente Principal",
+      "type": "checking",
+      "balance": -50,
+      "color": "#3b82f6",
+      "bank": "Banco Principal",
+      "icon": "Building2",
+      "createdAt": "2026-11-07T00:30:23.083Z"
+    }
+  ],
+  "cards": [
+    {
+      "id": "crd_nubank",
+      "userId": "usr_demo_1",
+      "name": "Nubank Ultravioleta",
+      "last4": "8842",
+      "brand": "mastercard",
+      "limit": 15000,
+      "availableLimit": 11840.3,
+      "closingDay": 5,
+      "dueDay": 12,
+      "color": "#5b108e",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "crd_inter",
+      "userId": "usr_demo_1",
+      "name": "Inter Black Mastercard",
+      "last4": "1094",
+      "brand": "mastercard",
+      "limit": 22000,
+      "availableLimit": 19540,
+      "closingDay": 18,
+      "dueDay": 25,
+      "color": "#ff7a00",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "tx_1794011435269_mi2x",
+      "userId": "usr_1794011423082_5aw1v",
+      "accountId": "acc_usr_1794011423082_5aw1v_1",
+      "description": "=1+1 Malicious Formula",
+      "amount": 50,
+      "type": "expense",
+      "category": "Outros",
+      "date": "2026-11-07",
+      "paymentMethod": "pix",
+      "status": "completed",
+      "createdAt": "2026-11-07T00:30:35.269Z"
+    },
+    {
+      "id": "tx_1",
+      "userId": "usr_demo_1",
+      "accountId": "acc_itau",
+      "description": "Salário Mensal Tech Lead",
+      "amount": 14500,
+      "type": "income",
+      "category": "Salário & Renda",
+      "date": "2026-11-07",
+      "paymentMethod": "transfer",
+      "status": "completed",
+      "observation": "Depósito em conta corrente referente ao mês vigente",
+      "createdAt": "2026-11-07T00:30:03.228Z"
+    },
+    {
+      "id": "tx_2",
+      "userId": "usr_demo_1",
+      "accountId": "acc_nubank",
+      "description": "Supermercado Pão de Açúcar",
+      "amount": 845.6,
+      "type": "expense",
+      "category": "Alimentação & Supermercado",
+      "date": "2026-11-07",
+      "paymentMethod": "debit",
+      "status": "completed",
+      "observation": "Compras do mês da despensa",
+      "createdAt": "2026-11-07T00:30:03.228Z"
+    },
+    {
+      "id": "tx_3",
+      "userId": "usr_demo_1",
+      "cardId": "crd_nubank",
+      "description": "Posto Shell Combustível",
+      "amount": 280,
+      "type": "expense",
+      "category": "Transporte & Combustível",
+      "date": "2026-11-07",
+      "paymentMethod": "credit",
+      "status": "completed",
+      "createdAt": "2026-11-07T00:30:03.228Z"
+    },
+    {
+      "id": "tx_4",
+      "userId": "usr_demo_1",
+      "accountId": "acc_itau",
+      "description": "Aluguel do Apartamento",
+      "amount": 3200,
+      "type": "expense",
+      "category": "Moradia & Contas",
+      "date": "2026-11-07",
+      "paymentMethod": "pix",
+      "status": "completed",
+      "observation": "Comprovante PIX enviado ao proprietário",
+      "createdAt": "2026-11-07T00:30:03.228Z"
+    },
+    {
+      "id": "tx_5",
+      "userId": "usr_demo_1",
+      "cardId": "crd_nubank",
+      "description": "Assinatura Netflix & Spotify",
+      "amount": 94.8,
+      "type": "expense",
+      "category": "Compras & Assinaturas",
+      "date": "2026-11-07",
+      "paymentMethod": "credit",
+      "status": "completed",
+      "createdAt": "2026-11-07T00:30:03.228Z"
+    },
+    {
+      "id": "tx_6",
+      "userId": "usr_demo_1",
+      "accountId": "acc_nubank",
+      "description": "Rendimento CDB 110% CDI",
+      "amount": 215.4,
+      "type": "income",
+      "category": "Rendimentos",
+      "date": "2026-11-07",
+      "paymentMethod": "transfer",
+      "status": "completed",
+      "createdAt": "2026-11-07T00:30:03.228Z"
+    },
+    {
+      "id": "tx_7",
+      "userId": "usr_demo_1",
+      "accountId": "acc_itau",
+      "description": "Jantar Restaurante Fogo de Chão",
+      "amount": 420,
+      "type": "expense",
+      "category": "Lazer & Viagens",
+      "date": "2026-11-07",
+      "paymentMethod": "pix",
+      "status": "completed",
+      "createdAt": "2026-11-07T00:30:03.228Z"
+    },
+    {
+      "id": "tx_8",
+      "userId": "usr_demo_1",
+      "accountId": "acc_itau",
+      "description": "Consultoria Externa Software",
+      "amount": 2800,
+      "type": "income",
+      "category": "Freelance & Extras",
+      "date": "2026-11-07",
+      "paymentMethod": "pix",
+      "status": "completed",
+      "createdAt": "2026-11-07T00:30:03.228Z"
+    },
+    {
+      "id": "tx_9",
+      "userId": "usr_demo_1",
+      "cardId": "crd_inter",
+      "description": "Farmácia Drogasil Medicamentos",
+      "amount": 154.3,
+      "type": "expense",
+      "category": "Saúde & Farmácia",
+      "date": "2026-11-07",
+      "paymentMethod": "credit",
+      "status": "completed",
+      "createdAt": "2026-11-07T00:30:03.228Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat_salario",
+      "userId": "usr_demo_1",
+      "name": "Salário & Renda",
+      "type": "income",
+      "color": "#10b981",
+      "icon": "Briefcase"
+    },
+    {
+      "id": "cat_invest",
+      "userId": "usr_demo_1",
+      "name": "Rendimentos",
+      "type": "income",
+      "color": "#06b6d4",
+      "icon": "TrendingUp"
+    },
+    {
+      "id": "cat_extra",
+      "userId": "usr_demo_1",
+      "name": "Freelance & Extras",
+      "type": "income",
+      "color": "#8b5cf6",
+      "icon": "Zap"
+    },
+    {
+      "id": "cat_moradia",
+      "userId": "usr_demo_1",
+      "name": "Moradia & Contas",
+      "type": "expense",
+      "color": "#f59e0b",
+      "icon": "Home"
+    },
+    {
+      "id": "cat_alimentacao",
+      "userId": "usr_demo_1",
+      "name": "Alimentação & Supermercado",
+      "type": "expense",
+      "color": "#ef4444",
+      "icon": "Utensils"
+    },
+    {
+      "id": "cat_transporte",
+      "userId": "usr_demo_1",
+      "name": "Transporte & Combustível",
+      "type": "expense",
+      "color": "#3b82f6",
+      "icon": "Car"
+    },
+    {
+      "id": "cat_saude",
+      "userId": "usr_demo_1",
+      "name": "Saúde & Farmácia",
+      "type": "expense",
+      "color": "#ec4899",
+      "icon": "Heart"
+    },
+    {
+      "id": "cat_lazer",
+      "userId": "usr_demo_1",
+      "name": "Lazer & Viagens",
+      "type": "expense",
+      "color": "#a855f7",
+      "icon": "Smile"
+    },
+    {
+      "id": "cat_educacao",
+      "userId": "usr_demo_1",
+      "name": "Educação & Cursos",
+      "type": "expense",
+      "color": "#14b8a6",
+      "icon": "GraduationCap"
+    },
+    {
+      "id": "cat_compras",
+      "userId": "usr_demo_1",
+      "name": "Compras & Assinaturas",
+      "type": "expense",
+      "color": "#f97316",
+      "icon": "ShoppingBag"
+    },
+    {
+      "id": "cat_usr_1794011423082_5aw1v_1",
+      "userId": "usr_1794011423082_5aw1v",
+      "name": "Salário & Renda",
+      "type": "income",
+      "color": "#10b981",
+      "icon": "Briefcase"
+    },
+    {
+      "id": "cat_usr_1794011423082_5aw1v_2",
+      "userId": "usr_1794011423082_5aw1v",
+      "name": "Rendimentos",
+      "type": "income",
+      "color": "#06b6d4",
+      "icon": "TrendingUp"
+    },
+    {
+      "id": "cat_usr_1794011423082_5aw1v_3",
+      "userId": "usr_1794011423082_5aw1v",
+      "name": "Freelance & Extras",
+      "type": "income",
+      "color": "#8b5cf6",
+      "icon": "Zap"
+    },
+    {
+      "id": "cat_usr_1794011423082_5aw1v_4",
+      "userId": "usr_1794011423082_5aw1v",
+      "name": "Moradia & Contas",
+      "type": "expense",
+      "color": "#f59e0b",
+      "icon": "Home"
+    },
+    {
+      "id": "cat_usr_1794011423082_5aw1v_5",
+      "userId": "usr_1794011423082_5aw1v",
+      "name": "Alimentação & Supermercado",
+      "type": "expense",
+      "color": "#ef4444",
+      "icon": "Utensils"
+    },
+    {
+      "id": "cat_usr_1794011423082_5aw1v_6",
+      "userId": "usr_1794011423082_5aw1v",
+      "name": "Transporte & Combustível",
+      "type": "expense",
+      "color": "#3b82f6",
+      "icon": "Car"
+    },
+    {
+      "id": "cat_usr_1794011423082_5aw1v_7",
+      "userId": "usr_1794011423082_5aw1v",
+      "name": "Saúde & Farmácia",
+      "type": "expense",
+      "color": "#ec4899",
+      "icon": "Heart"
+    },
+    {
+      "id": "cat_usr_1794011423082_5aw1v_8",
+      "userId": "usr_1794011423082_5aw1v",
+      "name": "Lazer & Viagens",
+      "type": "expense",
+      "color": "#a855f7",
+      "icon": "Smile"
+    },
+    {
+      "id": "cat_usr_1794011423082_5aw1v_9",
+      "userId": "usr_1794011423082_5aw1v",
+      "name": "Compras & Assinaturas",
+      "type": "expense",
+      "color": "#f97316",
+      "icon": "ShoppingBag"
+    }
+  ],
+  "budgets": [
+    {
+      "id": "bdg_alimentacao",
+      "userId": "usr_demo_1",
+      "categoryId": "cat_alimentacao",
+      "categoryName": "Alimentação & Supermercado",
+      "limit": 1500,
+      "spent": 845.6,
+      "month": 11,
+      "year": 2026
+    },
+    {
+      "id": "bdg_moradia",
+      "userId": "usr_demo_1",
+      "categoryId": "cat_moradia",
+      "categoryName": "Moradia & Contas",
+      "limit": 4000,
+      "spent": 3200,
+      "month": 11,
+      "year": 2026
+    },
+    {
+      "id": "bdg_lazer",
+      "userId": "usr_demo_1",
+      "categoryId": "cat_lazer",
+      "categoryName": "Lazer & Viagens",
+      "limit": 1000,
+      "spent": 420,
+      "month": 11,
+      "year": 2026
+    },
+    {
+      "id": "bdg_transporte",
+      "userId": "usr_demo_1",
+      "categoryId": "cat_transporte",
+      "categoryName": "Transporte & Combustível",
+      "limit": 600,
+      "spent": 280,
+      "month": 11,
+      "year": 2026
+    }
+  ],
+  "goals": [
+    {
+      "id": "goal_reserva",
+      "userId": "usr_demo_1",
+      "title": "Reserva de Emergência 6 Meses",
+      "targetAmount": 50000,
+      "currentAmount": 35000,
+      "deadline": "2026-12-31",
+      "color": "#10b981",
+      "icon": "ShieldCheck",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "goal_viagem",
+      "userId": "usr_demo_1",
+      "title": "Viagem de Férias Europa",
+      "targetAmount": 20000,
+      "currentAmount": 11500,
+      "deadline": "2026-09-15",
+      "color": "#3b82f6",
+      "icon": "Plane",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "goal_carro",
+      "userId": "usr_demo_1",
+      "title": "Entrada Carro Novo",
+      "targetAmount": 40000,
+      "currentAmount": 18200,
+      "deadline": "2027-04-30",
+      "color": "#8b5cf6",
+      "icon": "Car",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "investments": [
+    {
+      "id": "inv_cdb",
+      "userId": "usr_demo_1",
+      "name": "CDB Banco Inter 112% CDI",
+      "type": "cdb",
+      "amountInvested": 25000,
+      "currentValue": 27850.4,
+      "profitability": 11.4,
+      "dueDate": "2027-06-30",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "inv_tesouro",
+      "userId": "usr_demo_1",
+      "name": "Tesouro IPCA+ 2035",
+      "type": "tesouro",
+      "amountInvested": 18000,
+      "currentValue": 19420,
+      "profitability": 7.89,
+      "dueDate": "2035-05-15",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "inv_fii",
+      "userId": "usr_demo_1",
+      "name": "FIIs Imobiliários (HGLG11 / KNCR11)",
+      "type": "fii",
+      "amountInvested": 15000,
+      "currentValue": 16180.5,
+      "profitability": 7.87,
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "inv_stocks",
+      "userId": "usr_demo_1",
+      "name": "Carteira Ações Dividendos (VALE3, ITUB4)",
+      "type": "stocks",
+      "amountInvested": 12000,
+      "currentValue": 13950,
+      "profitability": 16.25,
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "pixKeys": [
+    {
+      "id": "pix_1",
+      "userId": "usr_demo_1",
+      "key": "usuario@exemplo.com",
+      "type": "email",
+      "accountId": "acc_itau",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "pix_2",
+      "userId": "usr_demo_1",
+      "key": "11999887766",
+      "type": "phone",
+      "accountId": "acc_nubank",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif_1",
+      "userId": "usr_demo_1",
+      "title": "Fatura Próxima do Fechamento",
+      "message": "A fatura do seu cartão Nubank fecha em 5 dias.",
+      "type": "warning",
+      "read": false,
+      "createdAt": "2026-11-07T00:30:03.228Z"
+    },
+    {
+      "id": "notif_2",
+      "userId": "usr_demo_1",
+      "title": "Meta Quase Alcançada",
+      "message": "Você atingiu 70% da sua Reserva de Emergência!",
+      "type": "success",
+      "read": false,
+      "createdAt": "2026-11-07T00:30:03.228Z"
+    }
+  ]
+}
