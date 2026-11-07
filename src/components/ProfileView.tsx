@@ -13,8 +13,10 @@ import {
   Camera,
   Upload,
   Trash2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Smartphone
 } from 'lucide-react';
+import { PWAInstallButton } from './PWAInstallButton';
 
 export const ProfileView: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
   const { user, updateUser } = useAuth();
@@ -345,6 +347,32 @@ export const ProfileView: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) =
               <span>{isChangingPass ? 'Processando...' : 'Atualizar Senha'}</span>
             </button>
           </form>
+        </div>
+      </div>
+
+      {/* Card 3: Aplicativo PWA (Instalar no Celular ou Notebook) */}
+      <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-md space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl overflow-hidden border border-emerald-500/30 shadow-lg shadow-emerald-500/10 flex-shrink-0">
+              <img src="/icons/icon-192.png" alt="FinanFlow" className="w-full h-full object-cover" />
+            </div>
+            <div>
+              <h2 className="text-base font-black text-white flex items-center gap-2">
+                <span>Aplicativo FinanFlow (PWA)</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  Instalável
+                </span>
+              </h2>
+              <p className="text-xs text-slate-400">
+                Instale o app diretamente no seu celular ou computador para abrir em tela cheia com o novo ícone.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-md pt-2">
+          <PWAInstallButton isDarkMode={isDarkMode} />
         </div>
       </div>
     </div>

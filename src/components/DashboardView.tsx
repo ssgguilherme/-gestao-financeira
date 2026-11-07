@@ -10,7 +10,6 @@ import {
   Eye,
   EyeOff,
   PlusCircle,
-  QrCode,
   FileSpreadsheet,
   AlertTriangle,
   CheckCircle,
@@ -199,65 +198,104 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Saldo Total */}
-        <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-500/15 via-emerald-600/5 to-slate-900 border border-emerald-500/30 shadow-lg">
-          <div className="flex items-center justify-between text-emerald-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Saldo Total em Contas</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-              <Wallet className="w-4 h-4 text-emerald-400" />
+        <div
+          className={`p-5 rounded-3xl border shadow-sm transition-all ${
+            isDarkMode
+              ? 'bg-slate-900 border-slate-800 text-slate-100'
+              : 'bg-white border-slate-200 text-slate-800'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-500 dark:text-emerald-400">
+              Saldo Total em Contas
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center">
+              <Wallet className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
             </div>
           </div>
-          <div className="text-2xl font-black tracking-tight text-white">{formatCurrency(summary.totalBalance)}</div>
+          <div className={`text-2xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+            {formatCurrency(summary.totalBalance)}
+          </div>
           <div className="mt-2 text-[11px] text-slate-400 flex items-center justify-between">
             <span>{summary.accountsCount} contas ativas</span>
-            <button onClick={() => onNavigate('accounts')} className="text-emerald-400 hover:underline font-bold">
+            <button
+              onClick={() => onNavigate('accounts')}
+              className="text-emerald-500 dark:text-emerald-400 hover:underline font-bold transition-colors"
+            >
               Ver contas &rarr;
             </button>
           </div>
         </div>
 
         {/* Card 2: Receitas do Mês */}
-        <div className="p-5 rounded-3xl bg-slate-900/90 border border-slate-800 shadow-md">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Receitas no Mês</span>
+        <div
+          className={`p-5 rounded-3xl border shadow-sm transition-all ${
+            isDarkMode
+              ? 'bg-slate-900 border-slate-800 text-slate-100'
+              : 'bg-white border-slate-200 text-slate-800'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Receitas no Mês</span>
             <div className="w-8 h-8 rounded-xl bg-teal-500/10 flex items-center justify-center">
               <ArrowUpRight className="w-4 h-4 text-teal-400" />
             </div>
           </div>
-          <div className="text-2xl font-black tracking-tight text-teal-400">{formatCurrency(summary.monthlyIncome)}</div>
+          <div className="text-2xl font-black tracking-tight text-teal-500 dark:text-teal-400">
+            {formatCurrency(summary.monthlyIncome)}
+          </div>
           <div className="mt-2 text-[11px] text-slate-400">Entradas consolidadas</div>
         </div>
 
         {/* Card 3: Despesas do Mês */}
-        <div className="p-5 rounded-3xl bg-slate-900/90 border border-slate-800 shadow-md">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Despesas no Mês</span>
+        <div
+          className={`p-5 rounded-3xl border shadow-sm transition-all ${
+            isDarkMode
+              ? 'bg-slate-900 border-slate-800 text-slate-100'
+              : 'bg-white border-slate-200 text-slate-800'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Despesas no Mês</span>
             <div className="w-8 h-8 rounded-xl bg-rose-500/10 flex items-center justify-center">
               <ArrowDownRight className="w-4 h-4 text-rose-400" />
             </div>
           </div>
-          <div className="text-2xl font-black tracking-tight text-rose-400">{formatCurrency(summary.monthlyExpense)}</div>
+          <div className="text-2xl font-black tracking-tight text-rose-500 dark:text-rose-400">
+            {formatCurrency(summary.monthlyExpense)}
+          </div>
           <div className="mt-2 text-[11px] text-slate-400 flex items-center justify-between">
             <span>Balanço:</span>
-            <span className={`font-bold ${summary.monthlySavings >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+            <span
+              className={`font-bold ${
+                summary.monthlySavings >= 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'
+              }`}
+            >
               {formatCurrency(summary.monthlySavings)}
             </span>
           </div>
         </div>
 
         {/* Card 4: Investimentos */}
-        <div className="p-5 rounded-3xl bg-slate-900/90 border border-slate-800 shadow-md">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Patrimônio Investido</span>
+        <div
+          className={`p-5 rounded-3xl border shadow-sm transition-all ${
+            isDarkMode
+              ? 'bg-slate-900 border-slate-800 text-slate-100'
+              : 'bg-white border-slate-200 text-slate-800'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Patrimônio Investido</span>
             <div className="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center">
               <TrendingUp className="w-4 h-4 text-indigo-400" />
             </div>
           </div>
-          <div className="text-2xl font-black tracking-tight text-indigo-400">
+          <div className="text-2xl font-black tracking-tight text-indigo-500 dark:text-indigo-400">
             {formatCurrency(summary.currentInvestmentsValue)}
           </div>
           <div className="mt-2 text-[11px] text-slate-400 flex items-center justify-between">
             <span>Rentabilidade:</span>
-            <span className="font-bold text-emerald-400">+{summary.investmentProfitability}%</span>
+            <span className="font-bold text-emerald-500 dark:text-emerald-400">+{summary.investmentProfitability}%</span>
           </div>
         </div>
       </div>
@@ -267,41 +305,59 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <button
           type="button"
           onClick={onOpenNewTransaction}
-          className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-800/80 transition-all flex items-center gap-3 text-left group"
+          className={`p-3.5 rounded-2xl border transition-all flex items-center gap-3 text-left group ${
+            isDarkMode
+              ? 'bg-slate-900 border-slate-800 hover:border-emerald-500/50 hover:bg-slate-800/80'
+              : 'bg-white border-slate-200 hover:border-emerald-500/50 hover:bg-slate-50'
+          }`}
         >
           <div className="w-9 h-9 rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
             <PlusCircle className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-xs font-bold text-white leading-tight">Nova Transação</div>
+            <div className={`text-xs font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              Nova Transação
+            </div>
             <div className="text-[10px] text-slate-400">Receita ou despesa</div>
           </div>
         </button>
 
         <button
           type="button"
-          onClick={() => onNavigate('pix')}
-          className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all flex items-center gap-3 text-left group"
+          onClick={() => onNavigate('accounts')}
+          className={`p-3.5 rounded-2xl border transition-all flex items-center gap-3 text-left group ${
+            isDarkMode
+              ? 'bg-slate-900 border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80'
+              : 'bg-white border-slate-200 hover:border-teal-500/50 hover:bg-slate-50'
+          }`}
         >
           <div className="w-9 h-9 rounded-xl bg-teal-500/15 flex items-center justify-center text-teal-400 group-hover:scale-110 transition-transform">
-            <QrCode className="w-4 h-4" />
+            <CreditCard className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-xs font-bold text-white leading-tight">Área Pix</div>
-            <div className="text-[10px] text-slate-400">Enviar ou receber</div>
+            <div className={`text-xs font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              Contas & Cartões
+            </div>
+            <div className="text-[10px] text-slate-400">Saldos e limites</div>
           </div>
         </button>
 
         <button
           type="button"
           onClick={() => onNavigate('reports')}
-          className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-amber-500/50 hover:bg-slate-800/80 transition-all flex items-center gap-3 text-left group"
+          className={`p-3.5 rounded-2xl border transition-all flex items-center gap-3 text-left group ${
+            isDarkMode
+              ? 'bg-slate-900 border-slate-800 hover:border-amber-500/50 hover:bg-slate-800/80'
+              : 'bg-white border-slate-200 hover:border-amber-500/50 hover:bg-slate-50'
+          }`}
         >
           <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
             <FileSpreadsheet className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-xs font-bold text-white leading-tight">Backup Seguro</div>
+            <div className={`text-xs font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              Backup Seguro
+            </div>
             <div className="text-[10px] text-slate-400">Exportar/Restaurar</div>
           </div>
         </button>
@@ -309,13 +365,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <button
           type="button"
           onClick={() => onNavigate('goals')}
-          className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-800/80 transition-all flex items-center gap-3 text-left group"
+          className={`p-3.5 rounded-2xl border transition-all flex items-center gap-3 text-left group ${
+            isDarkMode
+              ? 'bg-slate-900 border-slate-800 hover:border-emerald-500/50 hover:bg-slate-800/80'
+              : 'bg-white border-slate-200 hover:border-emerald-500/50 hover:bg-slate-50'
+          }`}
         >
           <div className="w-9 h-9 rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
             <PiggyBank className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-xs font-bold text-white leading-tight">Metas & Economia</div>
+            <div className={`text-xs font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              Metas & Economia
+            </div>
             <div className="text-[10px] text-slate-400">Objetivos financeiros</div>
           </div>
         </button>
@@ -324,10 +386,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chart 1: Despesas por Categoria (Doughnut) */}
-        <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-md flex flex-col justify-between">
+        <div
+          className={`p-5 rounded-3xl border shadow-md flex flex-col justify-between ${
+            isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+          }`}
+        >
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-bold text-white">Despesas por Categoria</h3>
+              <h3 className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                Despesas por Categoria
+              </h3>
               <p className="text-[11px] text-slate-400">Distribuição no mês vigente</p>
             </div>
           </div>
@@ -353,10 +421,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Chart 2: Fluxo Mensal (Bar) */}
-        <div className="lg:col-span-2 p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-md flex flex-col justify-between">
+        <div
+          className={`lg:col-span-2 p-5 rounded-3xl border shadow-md flex flex-col justify-between ${
+            isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+          }`}
+        >
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-bold text-white">Fluxo Financeiro Semestral</h3>
+              <h3 className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                Fluxo Financeiro Semestral
+              </h3>
               <p className="text-[11px] text-slate-400">Comparativo de entradas e saídas nos últimos 6 meses</p>
             </div>
           </div>
@@ -369,22 +443,28 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Bottom Grid: Recent Transactions & Goals */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Transactions List */}
-        <div className="lg:col-span-2 p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-md space-y-4">
+        <div
+          className={`lg:col-span-2 p-5 rounded-3xl border shadow-md space-y-4 ${
+            isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-bold text-white">Lançamentos Recentes</h3>
+              <h3 className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                Lançamentos Recentes
+              </h3>
               <p className="text-[11px] text-slate-400">Últimas movimentações registradas</p>
             </div>
             <button
               onClick={() => onNavigate('transactions')}
-              className="text-xs text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1"
+              className="text-xs text-emerald-500 dark:text-emerald-400 hover:underline font-bold flex items-center gap-1"
             >
               <span>Ver extrato completo</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="divide-y divide-slate-800">
+          <div className={`divide-y ${isDarkMode ? 'divide-slate-800' : 'divide-slate-100'}`}>
             {recentTransactions.length === 0 ? (
               <div className="py-8 text-center text-xs text-slate-400">
                 Nenhuma transação cadastrada nesta conta ainda.
@@ -409,7 +489,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       )}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-xs font-bold text-white truncate">{tx.description}</div>
+                      <div className={`text-xs font-bold truncate ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+                        {tx.description}
+                      </div>
                       <div className="text-[10px] text-slate-400 flex items-center gap-2">
                         <span>{tx.category}</span>
                         <span>&bull;</span>
@@ -421,12 +503,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <div className="text-right flex-shrink-0">
                     <div
                       className={`text-xs font-bold ${
-                        tx.type === 'income' ? 'text-emerald-400' : 'text-rose-400'
+                        tx.type === 'income' ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'
                       }`}
                     >
                       {tx.type === 'income' ? '+' : '-'} {formatCurrency(tx.amount)}
                     </div>
-                    <div className="text-[10px] uppercase font-bold text-slate-500">{tx.paymentMethod}</div>
+                    <div className="text-[10px] uppercase font-bold text-slate-400">{tx.paymentMethod}</div>
                   </div>
                 </div>
               ))
@@ -435,15 +517,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Goals Summary Sidebar Card */}
-        <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-md space-y-4">
+        <div
+          className={`p-5 rounded-3xl border shadow-md space-y-4 ${
+            isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-bold text-white">Metas Financeiras</h3>
+              <h3 className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                Metas Financeiras
+              </h3>
               <p className="text-[11px] text-slate-400">Progresso dos seus objetivos</p>
             </div>
             <button
               onClick={() => onNavigate('goals')}
-              className="text-xs text-emerald-400 hover:text-emerald-300 font-bold"
+              className="text-xs text-emerald-500 dark:text-emerald-400 hover:underline font-bold"
             >
               Ver todas
             </button>
@@ -458,14 +546,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               goalsSummary.map((goal) => {
                 const percent = Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100));
                 return (
-                  <div key={goal.id} className="space-y-1.5 p-3 rounded-2xl bg-slate-800/40 border border-slate-800">
+                  <div
+                    key={goal.id}
+                    className={`space-y-1.5 p-3 rounded-2xl border ${
+                      isDarkMode ? 'bg-slate-800/40 border-slate-800' : 'bg-slate-50 border-slate-200'
+                    }`}
+                  >
                     <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-white truncate">{goal.title}</span>
-                      <span className="text-emerald-400">{percent}%</span>
+                      <span className={`truncate ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>{goal.title}</span>
+                      <span className="text-emerald-500 dark:text-emerald-400">{percent}%</span>
                     </div>
-                    <div className="w-full bg-slate-700/50 h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-slate-200 dark:bg-slate-700/50 h-2 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500"
+                        className="h-full bg-emerald-500 rounded-full transition-all duration-500"
                         style={{ width: `${percent}%` }}
                       />
                     </div>

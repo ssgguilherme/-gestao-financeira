@@ -1,9 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/web-manifest.json",
-  "id": "com.gestaofinanceira.app",
-  "name": "Gestão Financeira Pessoal - Finanças & Controle",
-  "short_name": "Finanças",
-  "description": "Sistema completo de gestão financeira pessoal estilo Nubank/Inter com controle de contas, cartões de crédito, PIX, orçamentos, investimentos, metas e gráficos interativos.",
+  "id": "/",
+  "name": "FinanFlow - Gestão Financeira Pessoal",
+  "short_name": "FinanFlow",
+  "description": "Controle completo das suas finanças pessoais com saldo, contas, cartões, relatórios e metas.",
   "lang": "pt-BR",
   "dir": "ltr",
   "start_url": "/",
@@ -16,7 +16,7 @@
     "browser"
   ],
   "orientation": "portrait-primary",
-  "background_color": "#0f172a",
+  "background_color": "#020617",
   "theme_color": "#10b981",
   "categories": [
     "finance",
@@ -98,20 +98,7 @@
     {
       "name": "Nova Transação",
       "short_name": "Nova Tx",
-      "description": "Lançar nova receita, despesa ou transferência",
-      "url": "/?action=new-tx",
-      "icons": [
-        {
-          "src": "/icons/icon-96.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
-    },
-    {
-      "name": "Extrato de Transações",
-      "short_name": "Extrato",
-      "description": "Ver histórico e filtros de transações",
+      "description": "Lançar nova receita ou despesa",
       "url": "/?tab=transactions",
       "icons": [
         {
@@ -122,10 +109,10 @@
       ]
     },
     {
-      "name": "Área PIX",
-      "short_name": "PIX",
-      "description": "Fazer e gerenciar transferências via PIX",
-      "url": "/?tab=pix",
+      "name": "Contas & Cartões",
+      "short_name": "Contas",
+      "description": "Gerenciar contas bancárias e cartões",
+      "url": "/?tab=accounts",
       "icons": [
         {
           "src": "/icons/icon-96.png",
@@ -135,10 +122,10 @@
       ]
     },
     {
-      "name": "Meus Cartões",
-      "short_name": "Cartões",
-      "description": "Gerenciar limites, faturas e cartões virtuais",
-      "url": "/?tab=cards",
+      "name": "Extrato Completo",
+      "short_name": "Extrato",
+      "description": "Histórico detalhado de movimentações",
+      "url": "/?tab=transactions",
       "icons": [
         {
           "src": "/icons/icon-96.png",
@@ -150,7 +137,7 @@
     {
       "name": "Investimentos",
       "short_name": "Aportes",
-      "description": "Acompanhar carteira e rendimentos",
+      "description": "Acompanhar patrimônio e rentabilidade",
       "url": "/?tab=investments",
       "icons": [
         {
@@ -159,40 +146,6 @@
           "type": "image/png"
         }
       ]
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshots/dashboard-desktop.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Painel Principal de Gestão Financeira com Gráficos e Balanço"
-    },
-    {
-      "src": "/screenshots/dashboard-mobile.png",
-      "sizes": "750x1334",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Visão Mobile com Resumo de Saldo, Atalhos Rápidos e Extrato"
-    }
-  ],
-  "launch_handler": {
-    "client_mode": "focus-existing"
-  },
-  "share_target": {
-    "action": "/?action=share-tx",
-    "method": "GET",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url"
-    }
-  },
-  "protocol_handlers": [
-    {
-      "protocol": "web+finance",
-      "url": "/?protocol=%s"
     }
   ]
 }

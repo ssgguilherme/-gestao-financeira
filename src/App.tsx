@@ -18,10 +18,10 @@ import { TransactionsView } from './components/TransactionsView';
 import { AccountsCardsView } from './components/AccountsCardsView';
 import { InvestmentsView } from './components/InvestmentsView';
 import { GoalsBudgetsView } from './components/GoalsBudgetsView';
-import { PixView } from './components/PixView';
 import { ReportsView } from './components/ReportsView';
 import { ProfileView } from './components/ProfileView';
 import { AuthModal } from './components/AuthModal';
+import { OfflineSyncBanner } from './components/OfflineSyncBanner';
 import {
   Menu,
   Sparkles,
@@ -141,6 +141,9 @@ function FinanFlowApp() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
+        {/* Offline & Sync Notification Banner */}
+        <OfflineSyncBanner onRefreshData={refreshAllData} />
+
         {/* Mobile Navbar Header */}
         <header className="md:hidden sticky top-0 z-30 p-4 border-b border-slate-800/20 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -214,15 +217,6 @@ function FinanFlowApp() {
             <GoalsBudgetsView
               goals={goals}
               budgets={budgets}
-              onRefresh={refreshAllData}
-              isDarkMode={isDarkMode}
-            />
-          )}
-
-          {currentTab === 'pix' && (
-            <PixView
-              pixKeys={pixKeys}
-              accounts={accounts}
               onRefresh={refreshAllData}
               isDarkMode={isDarkMode}
             />

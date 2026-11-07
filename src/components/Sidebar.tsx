@@ -7,7 +7,6 @@ import {
   CreditCard,
   TrendingUp,
   Target,
-  QrCode,
   FileSpreadsheet,
   ShieldAlert,
   UserCheck,
@@ -18,6 +17,7 @@ import {
   Sparkles,
   Settings
 } from 'lucide-react';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface SidebarProps {
   currentTab: ViewTab;
@@ -44,7 +44,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { tab: 'accounts', label: 'Contas & Cartões', icon: CreditCard },
     { tab: 'investments', label: 'Investimentos', icon: TrendingUp },
     { tab: 'goals', label: 'Metas & Orçamentos', icon: Target },
-    { tab: 'pix', label: 'Área Pix', icon: QrCode },
     { tab: 'reports', label: 'Relatórios & Backup', icon: FileSpreadsheet },
     { tab: 'profile', label: 'Configurações', icon: Settings }
   ];
@@ -173,6 +172,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Bottom Actions */}
         <div className="p-4 border-t border-slate-800/20 dark:border-slate-800 space-y-2">
+          {/* Botão de Instalação PWA */}
+          <PWAInstallButton isDarkMode={isDarkMode} />
+
           {/* Botão de Configurações (Alterar Senha e Nome) */}
           <button
             type="button"
